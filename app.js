@@ -537,12 +537,18 @@ async function finalizeDraw(numberPicked, forceZone4 = false) {
       body: JSON.stringify({ code }),
     });
 
-    const data = await resp.json();
-    if (!resp.ok || !data.token) {
-      console.error(data);
-      alert("Erreur login Discord.");
-      return screenPseudo();
+    const data = await resp.json().catch(() => null);
+
+    if (!resp.ok || !data?.token) {
+    console.error("discordAuth error:", resp.status, data);
+    alert(
+        "Erreur login Discord.\n\n" +
+        "Status: " + resp.status + "\n" +
+        "Réponse: " + JSON.stringify(data)
+    );
+    return screenPseudo();
     }
+
 
     await signInWithCustomToken(auth, data.token);
 

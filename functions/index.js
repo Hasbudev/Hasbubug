@@ -34,6 +34,8 @@ exports.discordAuth = onRequest(
       }
 
       const { clientId, clientSecret, redirectUri } = getCfg();
+      console.log("cfg ok?", !!clientId, !!clientSecret, redirectUri);
+
 
       // 1) Exchange code
       const params = new URLSearchParams();
