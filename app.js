@@ -257,24 +257,20 @@ function zoneKeyAt(i) { return ZONE_KEYS[i]; }
  *  ========================= */
 function screenPseudo() {
   render(`
-    <h2 class="big">Entre ton pseudo</h2>
-    <div class="row">
-      <div class="col">
-        <input id="pseudoInput" placeholder="Ton pseudo" maxlength="24" />
-        <p class="muted">Connexion Discord obligatoire (anti-triche).</p>
-      </div>
-      <div>
-        <button id="discordBtn" class="primary">Se connecter avec Discord</button>
-      </div>
+    <h2 class="big">Connexion requise</h2>
+
+    <div class="row" style="justify-content:center">
+      <button id="discordBtn" class="primary big-btn">
+        🔗 Se connecter avec Discord
+      </button>
     </div>
+
+    <p class="muted" style="text-align:center;margin-top:12px">
+      Connexion obligatoire pour éviter la triche.
+    </p>
   `);
 
   document.getElementById("discordBtn").onclick = () => {
-    const pseudo = document.getElementById("pseudoInput").value.trim();
-    if (!pseudo) return alert("Mets un pseudo 🙂");
-
-    localStorage.setItem("pendingPseudo", pseudo);
-
     const st = crypto.randomUUID();
     localStorage.setItem("discordState", st);
 
@@ -288,7 +284,6 @@ function screenPseudo() {
     window.location.href = authUrl.toString();
   };
 }
-
 
 function screenBlocked() {
   render(`
@@ -556,8 +551,7 @@ async function finalizeDraw(numberPicked, forceZone4 = false) {
     url.searchParams.delete("state");
     window.history.replaceState({}, "", url.toString());
 
-    const pseudo = localStorage.getItem("pendingPseudo") || data.discord?.username || "Joueur";
-    localStorage.removeItem("pendingPseudo");
+    const pseudo = data.discord?.username || "Joueur";
     localStorage.removeItem("discordState");
 
     //On garde le flow jeu existant
