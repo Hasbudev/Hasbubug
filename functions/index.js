@@ -80,3 +80,54 @@ exports.discordAuth = onRequest(
     }
   }
 );
+
+const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { google } = require("googleapis");
+
+const SHEET_ID = "1104vT2kRD4ITj7USk9GmtTJePPiiwqSeGxj3Y6HUD8Y";
+const TAB_NAME = "Plays"; // crée un onglet "Plays" dans le sheet
+
+async function appendToSheet(row) {
+  const auth = new google.auth.GoogleAuth({
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+  });
+
+  const sheets = google.sheets({ version: "v4", auth });
+
+  // On écrit A:F (F = playId, utile si tu veux filtrer/dédoublonner plus tard)
+  const range = `${TAB_NAME}!A:F`;
+
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: SHEET_ID,
+    range,
+    valueInputOption: "RAW",
+    insertDataOption: "INSERT_ROWS",
+    requestBody: { values: [row] },
+  });
+}
+
+exports.exportPlayToSheets = onDocumentCreated(
+  {
+    document: "plays/{playId}",
+    region: "us-central1",
+  },
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+
+    const play = snap.data();
+    const playId = event.params.playId;
+
+    const createdAtISO = snap.createTime?.toDate
+      ? snap.createTime.toDate().toISOString()
+      : new Date().toISOString();
+
+    const pseudo = play.pseudo || "";
+    const pokemonName = play?.pokemon?.name || "";
+    const weekNumber = play.weekNumber ?? "";
+    const zoneFinale = play.failedAtZone ? `Zone ${play.failedAtZone}` : "Zone 4";
+
+    // Colonnes: createdAt | pseudo | pokemonName | week | zone | playId
+    await appendToSheet([createdAtISO, pseudo, pokemonName, weekNumber, zoneFinale, playId]);
+  }
+);
