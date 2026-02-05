@@ -4,8 +4,10 @@ import {
   getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import {
-  getAuth, signInAnonymously
+  getAuth,
+  signInWithCustomToken
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
 
 /** =========================
  *  0) Firebase config
@@ -18,6 +20,13 @@ const FIREBASE_CONFIG = {
   appId: "1:444496450425:web:b2c9afd83bb06722c1d5a8",
 };
 
+const CURRENT_WEEK = 1; // <-- tu changes à la main chaque semaine
+
+const DISCORD_CLIENT_ID = "1469008258558722183";
+const DISCORD_AUTH_ENDPOINT = "https://discordauth-vrky2p236a-uc.a.run.app";
+const DISCORD_REDIRECT_URI = window.location.origin + window.location.pathname;
+
+
 const app = initializeApp(FIREBASE_CONFIG);
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -25,8 +34,6 @@ const auth = getAuth(app);
 /** =========================
  *  1) Data: zones & questions
  *  ========================= */
-
-const CURRENT_WEEK = 1; // tu mets 1, puis 2, puis 3... quand tu veux
 
 const ZONES = {
   zone1: [
@@ -253,21 +260,35 @@ function screenPseudo() {
     <h2 class="big">Entre ton pseudo</h2>
     <div class="row">
       <div class="col">
-        <input id="pseudoInput" placeholder="Ton pseudo (ex: Rémyssé)" maxlength="24" />
-        <p class="muted">Tu auras <b>1 tentative par semaine</b>.</p>
+        <input id="pseudoInput" placeholder="Ton pseudo" maxlength="24" />
+        <p class="muted">Connexion Discord obligatoire (anti-triche).</p>
       </div>
       <div>
-        <button id="goBtn" class="primary">Commencer</button>
+        <button id="discordBtn" class="primary">Se connecter avec Discord</button>
       </div>
     </div>
   `);
 
-  document.getElementById("goBtn").onclick = async () => {
+  document.getElementById("discordBtn").onclick = () => {
     const pseudo = document.getElementById("pseudoInput").value.trim();
     if (!pseudo) return alert("Mets un pseudo 🙂");
-    await startSession(pseudo);
+
+    localStorage.setItem("pendingPseudo", pseudo);
+
+    const st = crypto.randomUUID();
+    localStorage.setItem("discordState", st);
+
+    const authUrl = new URL("https://discord.com/api/oauth2/authorize");
+    authUrl.searchParams.set("client_id", DISCORD_CLIENT_ID);
+    authUrl.searchParams.set("redirect_uri", DISCORD_REDIRECT_URI);
+    authUrl.searchParams.set("response_type", "code");
+    authUrl.searchParams.set("scope", "identify");
+    authUrl.searchParams.set("state", st);
+
+    window.location.href = authUrl.toString();
   };
 }
+
 
 function screenBlocked() {
   render(`
@@ -399,29 +420,31 @@ function screenResult(pokemon, zoneKey, numberPicked) {
  *  ========================= */
 async function startSession(pseudo) {
   setStatus("Connexion…");
-  const cred = await signInAnonymously(auth);
-  state.uid = cred.user.uid;
+
+  if (!auth.currentUser) {
+    alert("Pas connecté à Discord. Recharge la page et reconnecte-toi.");
+    return screenPseudo();
+  }
+
+  state.uid = auth.currentUser.uid;
   state.pseudo = pseudo;
 
   const userData = await getOrCreateUser(state.uid, pseudo);
-  // si user existant, on met à jour pseudo (affichage)
   if (userData?.pseudo !== pseudo) await updatePseudo(state.uid, pseudo);
 
-  // recharge usedQuestionIds
   const freshUserSnap = await getDoc(doc(db, "users", state.uid));
   state.usedQuestionIds = freshUserSnap.data()?.usedQuestionIds || state.usedQuestionIds;
 
-  // check play semaine
   state.weekNumber = CURRENT_WEEK;
 
-const played = await hasPlayedThisWeek(state.uid, state.weekNumber);
-if (played) {
-  setStatus(`Connecté (${state.pseudo}) • Semaine ${state.weekNumber}`);
-  return screenBlocked();
-}
+  const played = await hasPlayedThisWeek(state.uid, state.weekNumber);
+  if (played) {
+    setStatus(`Connecté (${state.pseudo}) • Semaine ${state.weekNumber}`);
+    return screenBlocked();
+  }
 
   setStatus(`Connecté (${state.pseudo}) • Semaine ${state.weekNumber}`);
-  // démarre zone1
+
   state.currentZoneIndex = 0;
   state.stopped = false;
   state.failedAtZoneIndex = null;
@@ -499,7 +522,49 @@ async function finalizeDraw(numberPicked, forceZone4 = false) {
 /** =========================
  *  8) Boot
  *  ========================= */
-(function boot() {
-  setStatus(`Semaine 1`);
+(async function boot() {
+  const url = new URL(window.location.href);
+  const code = url.searchParams.get("code");
+  const stateParam = url.searchParams.get("state");
+
+  if (code) {
+    const expected = localStorage.getItem("discordState");
+    if (!expected || expected !== stateParam) {
+      alert("Erreur Discord (state). Réessaie.");
+      return screenPseudo();
+    }
+
+    setStatus("Connexion Discord…");
+
+    const resp = await fetch(DISCORD_AUTH_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    });
+
+    const data = await resp.json();
+    if (!resp.ok || !data.token) {
+      console.error(data);
+      alert("Erreur login Discord.");
+      return screenPseudo();
+    }
+
+    await signInWithCustomToken(auth, data.token);
+
+    // Nettoie l’URL (?code=...)
+    url.searchParams.delete("code");
+    url.searchParams.delete("state");
+    window.history.replaceState({}, "", url.toString());
+
+    const pseudo = localStorage.getItem("pendingPseudo") || data.discord?.username || "Joueur";
+    localStorage.removeItem("pendingPseudo");
+    localStorage.removeItem("discordState");
+
+    //On garde le flow jeu existant
+    return startSession(pseudo);
+  }
+
+  setStatus(`Semaine ${CURRENT_WEEK}`);
   screenPseudo();
 })();
+
