@@ -31,6 +31,7 @@ exports.discordAuth = onRequest(
       const redirectUri = DISCORD_REDIRECT_URI.value();
 
       // 1) Exchange code -> access_token
+      console.log("ENV redirect:", DISCORD_REDIRECT_URI.value());
       const params = new URLSearchParams();
       params.set("client_id", clientId);
       params.set("client_secret", clientSecret);

@@ -24,8 +24,7 @@ const CURRENT_WEEK = 1; // <-- tu changes à la main chaque semaine
 
 const DISCORD_CLIENT_ID = "1469008258558722183";
 const DISCORD_AUTH_ENDPOINT = "https://discordauth-vrky2p236a-uc.a.run.app";
-const DISCORD_REDIRECT_URI = window.location.origin + window.location.pathname;
-
+const DISCORD_REDIRECT_URI = "https://hasbudev.github.io/Hasbubug/";
 
 const app = initializeApp(FIREBASE_CONFIG);
 const db = getFirestore(app);
