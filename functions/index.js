@@ -7,12 +7,14 @@ const DISCORD_TOKEN_URL = "https://discord.com/api/oauth2/token";
 const DISCORD_ME_URL = "https://discord.com/api/users/@me";
 
 function getCfg() {
-  const cfg = require("firebase-functions").config();
-  return {
-    clientId: cfg.discord.client_id,
-    clientSecret: cfg.discord.client_secret,
-    redirectUri: cfg.discord.redirect_uri,
-  };
+  const clientId = process.env.DISCORD_CLIENT_ID;
+  const clientSecret = process.env.DISCORD_CLIENT_SECRET;
+  const redirectUri = process.env.DISCORD_REDIRECT_URI;
+
+  if (!clientId || !clientSecret || !redirectUri) {
+    throw new Error("Missing env vars DISCORD_CLIENT_ID / DISCORD_CLIENT_SECRET / DISCORD_REDIRECT_URI");
+  }
+  return { clientId, clientSecret, redirectUri };
 }
 
 exports.discordAuth = onRequest(
@@ -84,8 +86,8 @@ exports.discordAuth = onRequest(
         discord: { id: discordId, username },
       });
     } catch (e) {
-      console.error(e);
-      return res.status(500).json({ error: "Internal error" });
+    console.error("discordAuth crash:", e);
+    return res.status(500).json({ error: String(e?.message || e) });
     }
   }
 );
