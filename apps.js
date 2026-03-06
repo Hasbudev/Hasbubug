@@ -1,8 +1,7 @@
 // app.js (module)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp,
-  collection, query, where, orderBy, getDocs
+  getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import {
   getAuth,
@@ -98,34 +97,6 @@ const QUESTIONS = {
 };
 
 const ZONE_KEYS = ["zone1", "zone2", "zone3", "zone4"];
-
-/** =========================
- *  Rarity & visual config
- *  ========================= */
-const ZONE_RARITY = {
-  zone1: { label: "Commun",    color: "#a8b3cf", glow: "rgba(168,179,207,0.4)",  particle: false },
-  zone2: { label: "Peu commun",color: "#48ff9a", glow: "rgba(72,255,154,0.45)",  particle: false },
-  zone3: { label: "Rare",      color: "#6ee7ff", glow: "rgba(110,231,255,0.5)",  particle: true  },
-  zone4: { label: "Très rare", color: "#fbbf24", glow: "rgba(251,191,36,0.6)",   particle: true  },
-};
-
-const POKEBALL_BY_ZONE = {
-  zone1: { src: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png",   alt: "Pokéball"     },
-  zone2: { src: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png",  alt: "Super Ball"   },
-  zone3: { src: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png",  alt: "Hyper Ball"   },
-  zone4: { src: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png", alt: "Master Ball"  },
-};
-
-const SHINY_CHANCE = 50; // 1 in 50
-
-function isShiny(uid, weekNumber, zoneKey, numberPicked) {
-  const seed = hashStringToUint32(`shiny|${uid}|W${weekNumber}|${zoneKey}|${numberPicked}`);
-  return (seed % SHINY_CHANCE) === 0;
-}
-
-function pokemonShinyUrl(id) {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${id}.png`;
-}
 
 /** =========================
  *  2) UI helpers
@@ -229,7 +200,7 @@ async function hasPlayedThisWeek(uid, weekNumber) {
   return snap.exists();
 }
 
-async function savePlay({ uid, pseudo, weekNumber, zoneReached, failedAtZone, pokemon, numberPicked, questionsShown, shiny }) {
+async function savePlay({ uid, pseudo, weekNumber, zoneReached, failedAtZone, pokemon, numberPicked, questionsShown }) {
   const playRef = doc(db, "plays", `${uid}_W${weekNumber}`);
   await setDoc(playRef, {
     uid,
@@ -240,7 +211,6 @@ async function savePlay({ uid, pseudo, weekNumber, zoneReached, failedAtZone, po
     pokemon,
     numberPicked,
     questionsShown,
-    shiny: shiny || false,
     createdAt: serverTimestamp(),
   });
 }
@@ -280,8 +250,6 @@ const state = {
   currentQuestion: null,
   // user data
   usedQuestionIds: { zone1: [], zone2: [], zone3: [], zone4: [] },
-  // shiny flag for current draw
-  shiny: false,
 };
 
 function zoneKeyAt(i) { return ZONE_KEYS[i]; }
@@ -328,11 +296,7 @@ function screenBlocked() {
     <div class="hr"></div>
     <h2 class="big">Tu as déjà fait ton tirage cette semaine.</h2>
     <p class="muted">Reviens la semaine prochaine pour retenter ta chance (avec d'autres questions).</p>
-    <div style="margin-top:16px">
-      <button id="lbBtn" class="primary">📊 Voir le classement de la semaine</button>
-    </div>
   `);
-  document.getElementById("lbBtn").onclick = () => screenLeaderboard();
 }
 
 function screenQuestion() {
@@ -428,12 +392,7 @@ function screenWinAllZones() {
   };
 }
 
-function screenResult(pokemon, zoneKey, numberPicked, shiny = false) {
-  const rarity = ZONE_RARITY[zoneKey];
-  const ball   = POKEBALL_BY_ZONE[zoneKey];
-  const imgSrc = shiny ? pokemonShinyUrl(pokemon.id) : pokemonImageUrl(pokemon.id);
-  const rarityParticles = rarity.particle || shiny;
-
+function screenResult(pokemon, zoneKey, numberPicked) {
   render(`
     <div class="row" style="justify-content: space-between;">
       <div class="badge ok">Tirage validé</div>
@@ -466,8 +425,8 @@ function screenResult(pokemon, zoneKey, numberPicked, shiny = false) {
         80%  { transform: rotate(12deg); }
       }
       @keyframes ballglow {
-        0%,100% { filter: drop-shadow(0 0 6px ${rarity.glow}); }
-        50%     { filter: drop-shadow(0 0 28px ${rarity.glow}); }
+        0%,100% { filter: drop-shadow(0 0 6px #f87171); }
+        50%     { filter: drop-shadow(0 0 22px #fbbf24); }
       }
       @keyframes revealname {
         0%   { opacity: 0; transform: translateY(16px); }
@@ -478,14 +437,6 @@ function screenResult(pokemon, zoneKey, numberPicked, shiny = false) {
         40%  { transform: scale(1.15) translateY(-8px); opacity: 1; filter: brightness(2) saturate(0.5); }
         100% { transform: scale(1) translateY(0); opacity: 1; filter: brightness(1) saturate(1); }
       }
-      @keyframes particle-float {
-        0%   { transform: translate(0,0) scale(1); opacity: 1; }
-        100% { transform: translate(var(--px), var(--py)) scale(0); opacity: 0; }
-      }
-      @keyframes shiny-pulse {
-        0%,100% { box-shadow: 0 0 18px 4px ${rarity.glow}; }
-        50%     { box-shadow: 0 0 40px 12px ${rarity.glow}; }
-      }
       .capture-stage {
         display: flex;
         flex-direction: column;
@@ -493,7 +444,6 @@ function screenResult(pokemon, zoneKey, numberPicked, shiny = false) {
         gap: 0;
         min-height: 260px;
         position: relative;
-        overflow: visible;
       }
       #pokeball-wrap {
         position: relative;
@@ -510,8 +460,6 @@ function screenResult(pokemon, zoneKey, numberPicked, shiny = false) {
         height: 150px;
         object-fit: contain;
         margin-top: -10px;
-        border-radius: 16px;
-        ${shiny ? `animation: shiny-pulse 1.5s ease-in-out infinite; background: rgba(255,255,255,0.04);` : ""}
       }
       #result-name {
         animation: revealname 0.6s ease forwards;
@@ -519,63 +467,21 @@ function screenResult(pokemon, zoneKey, numberPicked, shiny = false) {
         text-align: center;
         margin-top: 10px;
       }
-      .rarity-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 12px;
-        border-radius: 999px;
-        font-size: 13px;
-        font-weight: 600;
-        border: 1px solid ${rarity.color};
-        color: ${rarity.color};
-        background: rgba(0,0,0,0.3);
-        ${rarity.particle ? `box-shadow: 0 0 10px ${rarity.glow};` : ""}
-      }
-      .shiny-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 4px 12px;
-        border-radius: 999px;
-        font-size: 13px;
-        font-weight: 700;
-        border: 1px solid #fbbf24;
-        color: #fbbf24;
-        background: rgba(251,191,36,0.12);
-        box-shadow: 0 0 14px rgba(251,191,36,0.5);
-      }
-      .particle {
-        position: absolute;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        pointer-events: none;
-        background: ${shiny ? "#fbbf24" : rarity.color};
-        animation: particle-float 1.2s ease-out forwards;
-      }
     </style>
 
-    <div class="capture-stage" id="capture-stage">
+    <div class="capture-stage">
       <div id="pokeball-wrap">
         <img id="pokeball-img"
-          src="${ball.src}"
-          alt="${esc(ball.alt)}" style="width:110px;height:110px;image-rendering:pixelated" />
+          src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png"
+          alt="Pokéball" style="width:110px;height:110px;image-rendering:pixelated" />
       </div>
       <img id="poke-img"
-        src="${imgSrc}"
+        src="${pokemonImageUrl(pokemon.id)}"
         alt="${esc(pokemon.name)}"
         style="opacity:0" />
       <div id="result-name" style="opacity:0">
-        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:8px">
-          <span class="rarity-badge">${rarity.label}</span>
-          ${shiny ? `<span class="shiny-badge">✨ Shiny !</span>` : ""}
-        </div>
-        <h2 class="big">Tu obtiens : <span style="color: ${rarity.color}">${esc(pokemon.name)}</span></h2>
+        <h2 class="big">Tu obtiens : <span style="color: var(--accent)">${esc(pokemon.name)}</span></h2>
         <p class="muted">Ton résultat a été enregistré. Reviens la semaine prochaine pour retenter.</p>
-        <div style="margin-top:14px">
-          <button id="lbBtn" class="primary">📊 Voir le classement de la semaine</button>
-        </div>
       </div>
     </div>
   `);
@@ -609,31 +515,11 @@ function screenResult(pokemon, zoneKey, numberPicked, shiny = false) {
     pokeImg.style.animation = "pokeexit 0.7s cubic-bezier(.22,1,.36,1) forwards";
   }, 3950);
 
-  // Step 5: reveal name (4.7s) + particles
+  // Step 5: reveal name (4.7s)
   setTimeout(() => {
     nameEl.style.opacity = "1";
     nameEl.style.animation = "revealname 0.6s ease forwards";
-    if (rarityParticles) spawnParticles(document.getElementById("capture-stage"), shiny);
-    document.getElementById("lbBtn")?.addEventListener("click", () => screenLeaderboard());
   }, 4700);
-}
-
-function spawnParticles(container, golden = false) {
-  const count = golden ? 28 : 16;
-  for (let i = 0; i < count; i++) {
-    const p = document.createElement("div");
-    p.className = "particle";
-    const angle = (i / count) * 2 * Math.PI + Math.random() * 0.5;
-    const dist = 60 + Math.random() * 80;
-    p.style.setProperty("--px", `${Math.cos(angle) * dist}px`);
-    p.style.setProperty("--py", `${Math.sin(angle) * dist - 40}px`);
-    p.style.left = "50%";
-    p.style.top  = "45%";
-    p.style.animationDelay = `${Math.random() * 0.4}s`;
-    p.style.width = p.style.height = (4 + Math.random() * 6) + "px";
-    container.appendChild(p);
-    setTimeout(() => p.remove(), 1800);
-  }
 }
 
 /** =========================
@@ -722,9 +608,6 @@ async function finalizeDraw(numberPicked, forceZone4 = false) {
     numberPicked,
   });
 
-  // shiny deterministic
-  state.shiny = isShiny(state.uid, state.weekNumber, zoneKey, numberPicked);
-
   // zoneReached = nombre de zones validées (questions correctes)
   const zoneReached = Math.max(0, (state.failedAtZoneIndex ?? zoneIndex));
   const failedAtZone = forceZone4 ? null : (state.failedAtZoneIndex + 1);
@@ -738,89 +621,9 @@ async function finalizeDraw(numberPicked, forceZone4 = false) {
     pokemon,
     numberPicked,
     questionsShown: state.questionsShown,
-    shiny: state.shiny,
   });
 
-  screenResult(pokemon, zoneKey, numberPicked, state.shiny);
-}
-
-/** =========================
- *  Leaderboard screen
- *  ========================= */
-async function screenLeaderboard() {
-  render(`<p class="muted" style="text-align:center;padding:30px">Chargement du classement…</p>`);
-
-  try {
-    const q = query(
-      collection(db, "plays"),
-      where("weekNumber", "==", CURRENT_WEEK),
-      orderBy("zoneReached", "desc")
-    );
-    const snap = await getDocs(q);
-    const rows = [];
-    snap.forEach(d => rows.push(d.data()));
-
-    if (rows.length === 0) {
-      render(`
-        <h2 class="big">📊 Classement — Semaine ${CURRENT_WEEK}</h2>
-        <p class="muted">Personne n'a encore joué cette semaine.</p>
-        <button id="backBtn" style="margin-top:12px">← Retour</button>
-      `);
-      document.getElementById("backBtn").onclick = screenPseudo;
-      return;
-    }
-
-    const medals = ["🥇", "🥈", "🥉"];
-    const tableRows = rows.map((r, i) => {
-      const rarity = ZONE_RARITY[`zone${r.zoneReached + 1}`] || ZONE_RARITY.zone1;
-      const zoneLabel = r.zoneReached >= 1 ? `Zone ${r.zoneReached}` : "Zone 1";
-      const ballKey   = `zone${Math.max(1, r.zoneReached + (r.failedAtZone ? 0 : 1))}`;
-      const ball      = POKEBALL_BY_ZONE[ballKey] || POKEBALL_BY_ZONE.zone1;
-      const shinyTag  = r.shiny ? `<span style="color:#fbbf24;font-size:12px">✨</span>` : "";
-      const medal     = medals[i] || `<span style="color:var(--muted)">${i + 1}</span>`;
-      return `
-        <tr>
-          <td style="padding:8px 6px;text-align:center">${medal}</td>
-          <td style="padding:8px 6px;font-weight:600">${esc(r.pseudo)}</td>
-          <td style="padding:8px 6px;text-align:center">
-            <img src="${ball.src}" style="width:22px;height:22px;image-rendering:pixelated;vertical-align:middle" title="${esc(ball.alt)}" />
-            <span style="margin-left:4px;color:${rarity.color}">${zoneLabel}</span>
-          </td>
-          <td style="padding:8px 6px">
-            <span style="display:flex;align-items:center;gap:6px">
-              <img src="${r.shiny ? pokemonShinyUrl(r.pokemon?.id) : pokemonImageUrl(r.pokemon?.id)}"
-                   style="width:36px;height:36px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,0.05)" />
-              ${esc(r.pokemon?.name || "?")} ${shinyTag}
-            </span>
-          </td>
-        </tr>
-      `;
-    }).join("");
-
-    render(`
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <h2 class="big" style="margin:0">📊 Classement — Semaine ${CURRENT_WEEK}</h2>
-        <button id="backBtn">← Retour</button>
-      </div>
-      <div class="hr"></div>
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:14px">
-          <thead>
-            <tr style="color:var(--muted);font-size:12px;text-transform:uppercase;border-bottom:1px solid var(--border)">
-              <th style="padding:6px;text-align:center">#</th>
-              <th style="padding:6px;text-align:left">Joueur</th>
-              <th style="padding:6px;text-align:center">Zone</th>
-              <th style="padding:6px;text-align:left">Pokémon</th>
-            </tr>
-          </thead>
-          <tbody>${tableRows}</tbody>
-        </table>
-      </div>
-    `);
-    document.getElementById("backBtn").onclick = screenPseudo;
-  } catch (e) {
-    render(`<p class="muted" style="text-align:center;padding:30px">Erreur de chargement: ${esc(String(e))}</p>`);
-  }
+  screenResult(pokemon, zoneKey, numberPicked);
 }
 
 /** =========================
