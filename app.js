@@ -250,7 +250,64 @@ const state = {
   currentQuestion: null,
   // user data
   usedQuestionIds: { zone1: [], zone2: [], zone3: [], zone4: [] },
+  // timer
+  timerInterval: null,
+  timerSeconds: 0,
 };
+
+const TIMER_DURATION = 20;
+
+function clearTimer() {
+  if (state.timerInterval) {
+    clearInterval(state.timerInterval);
+    state.timerInterval = null;
+  }
+  document.removeEventListener("visibilitychange", onVisibilityChange);
+}
+
+function onVisibilityChange() {
+  if (document.hidden && state.currentQuestion && !state.stopped) {
+    clearTimer();
+    triggerTimeout(true);
+  }
+}
+
+function startTimer() {
+  clearTimer();
+  state.timerSeconds = TIMER_DURATION;
+  updateTimerUI();
+  document.addEventListener("visibilitychange", onVisibilityChange);
+  state.timerInterval = setInterval(() => {
+    state.timerSeconds--;
+    updateTimerUI();
+    if (state.timerSeconds <= 0) {
+      clearTimer();
+      triggerTimeout(false);
+    }
+  }, 1000);
+}
+
+function updateTimerUI() {
+  const el = document.getElementById("timer-bar");
+  const txt = document.getElementById("timer-text");
+  if (!el || !txt) return;
+  const pct = (state.timerSeconds / TIMER_DURATION) * 100;
+  el.style.width = pct + "%";
+  el.style.background = state.timerSeconds > 10 ? "#4ade80" : state.timerSeconds > 5 ? "#facc15" : "#f87171";
+  txt.textContent = state.timerSeconds + "s";
+}
+
+async function triggerTimeout(wasCheating) {
+  const msg = wasCheating
+    ? "⚠️ Changement d'onglet détecté — réponse annulée !"
+    : "⏱️ Temps écoulé !";
+  const timerEl = document.getElementById("timer-wrap");
+  if (timerEl) timerEl.innerHTML = `<p style="color:#f87171;font-weight:bold">${msg}</p>`;
+  await new Promise(r => setTimeout(r, 1200));
+  state.stopped = true;
+  state.failedAtZoneIndex = state.currentZoneIndex;
+  screenPickNumber();
+}
 
 function zoneKeyAt(i) { return ZONE_KEYS[i]; }
 
@@ -321,16 +378,28 @@ function screenQuestion() {
       `).join("")}
     </div>
 
+    <div id="timer-wrap" style="margin:12px 0">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <span id="timer-text" style="font-weight:bold;font-size:1.1rem;min-width:32px">20s</span>
+        <div style="flex:1;background:#333;border-radius:6px;height:10px;overflow:hidden">
+          <div id="timer-bar" style="height:100%;width:100%;background:#4ade80;transition:width 0.9s linear,background 0.5s"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="hr"></div>
     <p class="muted">Réponds juste : si c’est bon, tu avances. Si c’est faux… tu t’arrêtes et tu tires ton Pokémon.</p>
   `);
 
   screen.querySelectorAll("button.choice").forEach(btn => {
     btn.onclick = async () => {
+      clearTimer();
       const idx = Number(btn.dataset.idx);
       await answerQuestion(idx);
     };
   });
+
+  startTimer();
 }
 
 function screenPickNumber() {
@@ -451,14 +520,15 @@ async function startSession(pseudo) {
 
 async function loadNextQuestion() {
   const zoneKey = zoneKeyAt(state.currentZoneIndex);
-  const used = state.usedQuestionIds?.[zoneKey] || []; 
+  const used = state.usedQuestionIds?.[zoneKey] || [];  
   const q = pickQuestion(zoneKey, used);
   state.currentQuestion = q;
   state.questionsShown[zoneKey] = q.id;
 
+  // on marque comme utilisée dès l'affichage (comme tu veux)
   await markQuestionUsed(state.uid, zoneKey, q.id);
 
-  if (!state.usedQuestionIds[zoneKey]) state.usedQuestionIds[zoneKey] = [];  
+  // on met à jour local
   if (!state.usedQuestionIds[zoneKey].includes(q.id)) state.usedQuestionIds[zoneKey].push(q.id);
 
   screenQuestion();

@@ -451,15 +451,14 @@ async function startSession(pseudo) {
 
 async function loadNextQuestion() {
   const zoneKey = zoneKeyAt(state.currentZoneIndex);
-  const used = state.usedQuestionIds?.[zoneKey] || [];  
+  const used = state.usedQuestionIds?.[zoneKey] || []; 
   const q = pickQuestion(zoneKey, used);
   state.currentQuestion = q;
   state.questionsShown[zoneKey] = q.id;
 
-  // on marque comme utilisée dès l'affichage (comme tu veux)
   await markQuestionUsed(state.uid, zoneKey, q.id);
 
-  // on met à jour local
+  if (!state.usedQuestionIds[zoneKey]) state.usedQuestionIds[zoneKey] = [];  
   if (!state.usedQuestionIds[zoneKey].includes(q.id)) state.usedQuestionIds[zoneKey].push(q.id);
 
   screenQuestion();
