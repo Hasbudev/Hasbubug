@@ -335,9 +335,52 @@ function screenBlocked() {
   document.getElementById("lbBtn").onclick = () => screenLeaderboard();
 }
 
+let _questionTimer = null;
+const QUESTION_TIME = 20;
+let _activeQuestion = false; // true only while a question is on screen
+
+function clearQuestionTimer() {
+  if (_questionTimer) { clearInterval(_questionTimer); _questionTimer = null; }
+}
+
+// ── Anti-cheat: visibility & blur ────────────────────────────────────────────
+function _onCheatDetected() {
+  if (!_activeQuestion) return;
+  _activeQuestion = false;
+  clearQuestionTimer();
+
+  // Flash the screen red briefly
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(255,60,60,0.18);z-index:9999;pointer-events:none;transition:opacity 0.6s";
+  document.body.appendChild(overlay);
+  setTimeout(() => { overlay.style.opacity = "0"; setTimeout(() => overlay.remove(), 700); }, 400);
+
+  // Disable all choice buttons
+  screen.querySelectorAll("button.choice").forEach(b => b.classList.add("disabled", "timeout"));
+
+  // Show warning label if still visible
+  const secEl = document.getElementById("timerSec");
+  const lblEl = document.getElementById("timerLabel");
+  if (secEl) secEl.textContent = "Triche détectée !";
+  if (lblEl) lblEl.classList.add("urgent");
+
+  setTimeout(() => answerQuestion(-1), 1200);
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) _onCheatDetected();
+});
+window.addEventListener("blur", () => {
+  // blur fires when the window loses focus (alt-tab, new window, devtools...)
+  _onCheatDetected();
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
 function screenQuestion() {
   const zoneKey = zoneKeyAt(state.currentZoneIndex);
   const q = state.currentQuestion;
+  clearQuestionTimer();
+  _activeQuestion = true;
 
   render(`
     <div class="row" style="justify-content: space-between;">
@@ -347,6 +390,48 @@ function screenQuestion() {
     </div>
 
     <div class="hr"></div>
+
+    <style>
+      .timer-bar-wrap {
+        width: 100%;
+        height: 6px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 999px;
+        overflow: hidden;
+        margin-bottom: 14px;
+      }
+      .timer-bar {
+        height: 100%;
+        width: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #48ff9a, #6ee7ff);
+        transition: width 1s linear, background 1s linear;
+      }
+      .timer-label {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        font-size: 13px;
+        font-variant-numeric: tabular-nums;
+        margin-bottom: 6px;
+        color: var(--muted);
+        transition: color 0.4s;
+      }
+      @keyframes timer-pulse {
+        0%,100% { transform: scale(1); }
+        50%      { transform: scale(1.2); }
+      }
+      .timer-label.urgent { color: var(--danger); }
+      .timer-label.urgent .timer-icon { animation: timer-pulse 0.5s ease-in-out infinite; }
+      .choice.disabled { opacity: 0.45; pointer-events: none; }
+      .choice.timeout  { border-color: rgba(255,107,107,0.5) !important; background: rgba(255,107,107,0.08) !important; }
+    </style>
+
+    <div class="timer-label" id="timerLabel"><span class="timer-icon">⏱</span><span id="timerSec">${QUESTION_TIME}s</span></div>
+    <div class="timer-bar-wrap">
+      <div class="timer-bar" id="timerBar"></div>
+    </div>
 
     <h2 class="big">${esc(q.q)}</h2>
     <div class="grid">
@@ -358,15 +443,46 @@ function screenQuestion() {
     </div>
 
     <div class="hr"></div>
-    <p class="muted">Réponds juste : si c’est bon, tu avances. Si c’est faux… tu t’arrêtes et tu tires ton Pokémon.</p>
+    <p class="muted">Réponds juste : si c’est bon, tu avances. Si c’est faux… tu t’arrêtes et tu tires ton Pokémon.</p>
   `);
 
   screen.querySelectorAll("button.choice").forEach(btn => {
     btn.onclick = async () => {
-      const idx = Number(btn.dataset.idx);
-      await answerQuestion(idx);
+      _activeQuestion = false;
+      clearQuestionTimer();
+      await answerQuestion(Number(btn.dataset.idx));
     };
   });
+
+  // --- Countdown ---
+  let remaining = QUESTION_TIME;
+  const barEl  = document.getElementById("timerBar");
+  const lblEl  = document.getElementById("timerLabel");
+  const secEl  = document.getElementById("timerSec");
+
+  _questionTimer = setInterval(() => {
+    remaining--;
+    if (!barEl || !secEl) { clearQuestionTimer(); return; }
+
+    const pct = (remaining / QUESTION_TIME) * 100;
+    barEl.style.width = pct + "%";
+
+    if (remaining <= 5) {
+      barEl.style.background = "linear-gradient(90deg, #ff6b6b, #fbbf24)";
+      lblEl.classList.add("urgent");
+    } else if (remaining <= 10) {
+      barEl.style.background = "linear-gradient(90deg, #fbbf24, #6ee7ff)";
+    }
+    secEl.textContent = remaining + "s";
+
+    if (remaining <= 0) {
+      _activeQuestion = false;
+      clearQuestionTimer();
+      screen.querySelectorAll("button.choice").forEach(b => b.classList.add("disabled", "timeout"));
+      secEl.textContent = "Temps écoulé !";
+      setTimeout(() => answerQuestion(-1), 900);
+    }
+  }, 1000);
 }
 
 function screenPickNumber() {
