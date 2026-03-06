@@ -68,29 +68,357 @@ const ZONES = {
 
 const QUESTIONS = {
   zone1: [
-    { id: "z1_q1", q: "Zone 1 — Placeholder: 2 + 2 = ?", choices: ["3", "4", "5", "22"], answerIndex: 1 },
-    { id: "z1_q2", q: "Zone 1 — Placeholder: Couleur du ciel (temps clair) ?", choices: ["Vert", "Bleu", "Rouge", "Noir"], answerIndex: 1 },
-    { id: "z1_q3", q: "Zone 1 — Placeholder: 10 / 2 = ?", choices: ["3", "4", "5", "6"], answerIndex: 2 },
-    { id: "z1_q4", q: "Zone 1 — Placeholder: Pokémon type Insecte = ?", choices: ["Pikachu", "Chenipan", "Salamèche", "Rondoudou"], answerIndex: 1 },
-  ],
-  zone2: [
-    { id: "z2_q1", q: "Zone 2 — Placeholder: 12 × 3 = ?", choices: ["36", "24", "18", "48"], answerIndex: 0 },
-    { id: "z2_q2", q: "Zone 2 — Placeholder: Capitale de la France ?", choices: ["Lyon", "Marseille", "Paris", "Nice"], answerIndex: 2 },
-    { id: "z2_q3", q: "Zone 2 — Placeholder: 81 / 9 = ?", choices: ["7", "8", "9", "10"], answerIndex: 2 },
-    { id: "z2_q4", q: "Zone 2 — Placeholder: Un hexagone a combien de côtés ?", choices: ["5", "6", "7", "8"], answerIndex: 1 },
-  ],
-  zone3: [
-    { id: "z3_q1", q: "Zone 3 — Placeholder: 2^5 = ?", choices: ["16", "24", "32", "64"], answerIndex: 2 },
-    { id: "z3_q2", q: "Zone 3 — Placeholder: Racine carrée de 144 ?", choices: ["10", "11", "12", "13"], answerIndex: 2 },
-    { id: "z3_q3", q: "Zone 3 — Placeholder: 7 × 8 = ?", choices: ["54", "56", "58", "64"], answerIndex: 1 },
-    { id: "z3_q4", q: "Zone 3 — Placeholder: 15% de 200 = ?", choices: ["15", "20", "25", "30"], answerIndex: 3 },
-  ],
-  zone4: [
-    { id: "z4_q1", q: "Zone 4 — Placeholder: 3.5 × 8 = ?", choices: ["24", "26", "28", "30"], answerIndex: 2 },
-    { id: "z4_q2", q: "Zone 4 — Placeholder: 1/4 de 360 = ?", choices: ["60", "80", "90", "120"], answerIndex: 2 },
-    { id: "z4_q3", q: "Zone 4 — Placeholder: 2^10 = ?", choices: ["512", "1024", "2048", "4096"], answerIndex: 1 },
-    { id: "z4_q4", q: "Zone 4 — Placeholder: 999 - 456 = ?", choices: ["533", "543", "553", "563"], answerIndex: 1 },
-  ],
+    {
+      id: "z1_q1",
+      q: "Combien de faiblesses possède le type Insecte en 9ème génération ?",
+      choices: ["2", "3", "4", "5"],
+      answerIndex: 1
+    },
+    {
+      id: "z1_q2",
+      q: "Quelle est la BST maximale que possède un Pokémon de type Insecte ? (hors légendaires et méga-évolutions)",
+      choices: ["540", "550", "570", "600"],
+      answerIndex: 2
+    },
+    {
+      id: "z1_q3",
+      q: "Combien de Pokémon de type Insecte sont affublés du sigle OU en 9ème génération ?",
+      choices: ["0", "1", "2", "3"],
+      answerIndex: 0
+    },
+    {
+      id: "z1_q4",
+      q: "Combien de Pokémon de type Insecte sont affublés du signe UU en 9ème génération ? (Hors RUBL)",
+      choices: ["1", "2", "3", "4"],
+      answerIndex: 2
+    },
+    {
+      id: "z1_q5",
+      q: "Combien de Pokémon de type Insecte sont affublés du signe RU en 9ème génération ? (Hors NUBL)",
+      choices: ["2", "3", "4", "5"],
+      answerIndex: 1
+    },
+    {
+      id: "z1_q6",
+      q: "Combien de Pokémon de type Insecte sont affublés du signe NU en 9ème génération ? (Hors PUBL)",
+      choices: ["1", "2", "3", "4"],
+      answerIndex: 1
+    },
+    {
+      id: "z1_q7",
+      q: "Quel est le double type qu’il faudrait que possède un type Insecte, afin qu’il n’ait plus qu’une seule faiblesse (double) ?",
+      choices: ["Acier", "Roche", "Vol", "Dragon"],
+      answerIndex: 0
+    },
+    {
+      id: "z1_q8",
+      q: "Quelle est la seule capacité de type Insecte pouvant empoisonner ?",
+      choices: ["Dard-Nuée", "Double Dard", "Piqûre", "Plaie-Croix"],
+      answerIndex: 1
+    },
+    {
+      id: "z1_q9",
+      q: "Combien de faiblesses possédait le type Insecte en 1ère génération ?",
+      choices: ["2", "3", "4", "5"],
+      answerIndex: 2
+    },
+    {
+      id: "z1_q10",
+      q: "Sur combien de types les capacités de type Insecte sont-elles peu efficaces, en 9ème génération ?",
+      choices: ["5", "6", "7", "8"],
+      answerIndex: 2
+    },
+    {
+      id: "z1_q11",
+      q: "Si on faisait la moyenne des BST totales de tous les types Insecte, quelle serait la statistique qui aurait la plus grande valeur ?",
+      choices: ["Les PV", "L’attaque", "La défense", "La vitesse"],
+      answerIndex: 1
+    },
+    {
+      id: "z1_q12",
+      q: "Comment sont appelés les PNJs adultes fan du type Insecte ?",
+      choices: ["Les Dresseurs Bug", "Les Entomaniacs", "Les Scouts", "Les Collectionneurs"],
+      answerIndex: 1
+    },
+    {
+      id: "z1_q13",
+      q: "Comment sont appelés les PNJs enfants fans du type Insecte ?",
+      choices: ["Les Écoliers", "Les Rangers", "Les Scouts", "Les Entomaniacs"],
+      answerIndex: 2
+    },
+    {
+      id: "z1_q14",
+      q: "Dans quelle région n’y a-t-il ni champion d’arène ni membre du conseil 4 ni Maître de la Ligue ayant le type Insecte comme type fétiche ?",
+      choices: ["Sinnoh", "Unys", "Hoenn", "Kalos"],
+      answerIndex: 2
+    },
+
+    {
+      id: "z2_q1",
+      q: "Combien y a-t-il de capacités de type Insecte ?",
+      choices: ["28", "31", "34", "37"],
+      answerIndex: 1
+    },
+    {
+      id: "z2_q2",
+      q: "Comment est appelé le type Insecte dans les pays anglophones ?",
+      choices: ["Insect", "Beetle", "Bug", "Crawler"],
+      answerIndex: 2
+    },
+    {
+      id: "z2_q3",
+      q: "Comment s’appelle le talent boostant les attaques Insecte quand son utilisateur possède moins d’un tiers de ses PVs ?",
+      choices: ["Essaim", "Agitation", "Turbo", "Adaptabilité"],
+      answerIndex: 0
+    },
+    {
+      id: "z2_q4",
+      q: "Quel est le nom de l’item (hors Plaque) boostant de 20% les dégâts des capacités de type Insecte ?",
+      choices: ["Poudre Argentée", "Vive Griffe", "Bandeau Choix", "Roche Royale"],
+      answerIndex: 0
+    },
+    {
+      id: "z2_q5",
+      q: "Quel est le talent, seulement possédé par des Pokémon de type Insecte, qui augmente la précision des capacités de son utilisateur ?",
+      choices: ["Annule Garde", "Œil Composé", "Sniper", "Lentiteintée"],
+      answerIndex: 1
+    },
+    {
+      id: "z2_q6",
+      q: "Quel est le nom de l’attaque Z du type Insecte ?",
+      choices: ["Cocon Fatal", "Dard Mortel", "Essaim Suprême", "Toile Explosive"],
+      answerIndex: 0
+    },
+    {
+      id: "z2_q7",
+      q: "Quel est le Pokémon qui a officieusement été banni de l’OverUsed 9G à cause, en partie, de sa possibilité de téracristalliser en type Insecte ?",
+      choices: ["Rugit-Lune", "Fort-Ivoire", "Feu-Perçant", "Mite-de-Fer"],
+      answerIndex: 2
+    },
+    {
+      id: "z2_q8",
+      q: "Quel est le nom de la capacité d’Entry Hazard du type Insecte ?",
+      choices: ["Pics Toxik", "Picots", "Toile Gluante", "Danse-Lames"],
+      answerIndex: 2
+    },
+    {
+      id: "z2_q9",
+      q: "Quelle puissance possède la capacité Taillade, lancée 6 fois d’affilée, en 9ème génération ?",
+      choices: ["120", "140", "160", "180"],
+      answerIndex: 2
+    },
+    {
+      id: "z2_q10",
+      q: "Quelle est la capacité que Nosférapti possédait dès le départ en 3ème génération, qu’il ne peut avoir dorénavant qu’au niveau 55 en 8ème génération ?",
+      choices: ["Cru-Ailes", "Vampirisme", "Morsure", "Acrobatie"],
+      answerIndex: 1
+    },
+    {
+      id: "z2_q11",
+      q: "Comment s’appelle la capacité de type Insecte pouvant booster de 3 niveaux une statistique ?",
+      choices: ["Lumi-Queue", "Papillodanse", "Danse-Lames", "Repli"],
+      answerIndex: 0
+    },
+    {
+      id: "z2_q12",
+      q: "Hors légendaires et méga-évolutions, quel est le Pokémon Insecte avec la statistique de PV la plus élevée ?",
+      choices: ["Mouscoto", "Pyrax", "Cancrelove", "Scolocendre"],
+      answerIndex: 0
+    },
+    {
+      id: "z2_q13",
+      q: "Hors légendaires et méga-évolutions, quel est le Pokémon Insecte avec la statistique d’attaque la plus élevée ?",
+      choices: ["Cizayox", "Mouscoto", "Scarhino", "Fermite"],
+      answerIndex: 1
+    },
+    {
+      id: "z2_q14",
+      q: "Hors légendaires et méga-évolutions, quel est le Pokémon Insecte avec la statistique de défense la plus élevée ?",
+      choices: ["Foretress", "Chrysapile", "Caratroc", "Crabaraque"],
+      answerIndex: 2
+    },
+
+    {
+      id: "z3_q1",
+      q: "Hors légendaires et méga-évolutions, quel est le Pokémon Insecte avec la statistique d’attaque spéciale la plus élevée ?",
+      choices: ["Pyrax", "Yanmega", "Lucanon", "Aéromite"],
+      answerIndex: 2
+    },
+    {
+      id: "z3_q2",
+      q: "Hors légendaires et méga-évolutions, quel est le Pokémon Insecte avec la statistique de défense spéciale la plus élevée ?",
+      choices: ["Caratroc", "Foretress", "Tarenbulle", "Blindépique"],
+      answerIndex: 0
+    },
+    {
+      id: "z3_q3",
+      q: "Hors légendaires et méga-évolutions, quel est le Pokémon Insecte avec la statistique de vitesse la plus élevée ?",
+      choices: ["Ninjask", "Limaspeed", "Papinox", "Yanmega"],
+      answerIndex: 0
+    },
+    {
+      id: "z3_q4",
+      q: "Hors Little Cup et NFE, quel est le Pokémon Insecte avec la statistique de PV la plus faible ?",
+      choices: ["Munja", "Larvadar", "Apitrini", "Crikzik"],
+      answerIndex: 0
+    },
+    {
+      id: "z3_q5",
+      q: "Hors Little Cup et NFE, quel est le Pokémon Insecte avec la statistique d’attaque la plus faible ?",
+      choices: ["Munja", "Caratroc", "Cancrelove", "Cheniselle"],
+      answerIndex: 1
+    },
+    {
+      id: "z3_q6",
+      q: "Hors Little Cup et NFE, quel est le Pokémon Insecte avec la statistique de défense la plus faible ?",
+      choices: ["Cancrelove", "Munja", "Apireine", "Maskadra"],
+      answerIndex: 0
+    },
+    {
+      id: "z3_q7",
+      q: "Hors Little Cup et NFE, quel est le Pokémon Insecte avec la statistique d’attaque spéciale la plus faible ?",
+      choices: ["Caratroc", "Munja", "Mélokrik", "Parasect"],
+      answerIndex: 0
+    },
+    {
+      id: "z3_q8",
+      q: "Hors Little Cup et NFE, quel est le Pokémon Insecte avec la statistique de défense spéciale la plus faible ?",
+      choices: ["Caratroc", "Munja", "Cancrelove", "Mimigal"],
+      answerIndex: 1
+    },
+    {
+      id: "z3_q9",
+      q: "Hors Little Cup et NFE, quel est le Pokémon Insecte avec la statistique de vitesse la plus faible ?",
+      choices: ["Caratroc", "Crabaraque", "Foretress", "Parasect"],
+      answerIndex: 0
+    },
+    {
+      id: "z3_q10",
+      q: "Hors Little Cup et NFE, quel est le Pokémon Insecte avec la Base de Statistiques Totale la plus faible ?",
+      choices: ["Munja", "Larvadar", "Apitrini", "Crikzik"],
+      answerIndex: 0
+    },
+    {
+      id: "z3_q11",
+      q: "Quel est le Pokémon Insecte avec la Base de Statistiques Totale la plus faible ?",
+      choices: ["Munja", "Larvadar", "Crikzik", "Cheniselle"],
+      answerIndex: 1
+    },
+    {
+      id: "z3_q12",
+      q: "Hors légendaires et méga-évolutions, cite un des Pokémon Insecte avec la Base de Statistiques Totale la plus élevée.",
+      choices: ["Mouscoto", "Cizayox", "Scarhino", "Ninjask"],
+      answerIndex: 0
+    },
+    {
+      id: "z3_q13",
+      q: "Quelle est la statistique la plus élevée de Fermite ?",
+      choices: ["Attaque", "Défense", "Vitesse", "Défense Spéciale"],
+      answerIndex: 1
+    },
+    {
+      id: "z3_q14",
+      q: "Quelle est la statistique la plus élevée de Yanmega ?",
+      choices: ["Vitesse", "Attaque", "Attaque Spéciale", "Défense Spéciale"],
+      answerIndex: 2
+    },
+
+    {
+      id: "z4_q1",
+      q: "Quelle est la statistique la plus élevée de Manternel ?",
+      choices: ["Attaque", "Défense", "PV", "Vitesse"],
+      answerIndex: 0
+    },
+    {
+      id: "z4_q2",
+      q: "Quelle est la statistique la plus faible de Dardargnan ?",
+      choices: ["PV", "Défense", "Attaque Spéciale", "Défense Spéciale"],
+      answerIndex: 1
+    },
+    {
+      id: "z4_q3",
+      q: "Comment Léboulérou évolue-t-il ?",
+      choices: [
+        "Avec une Pierre Nuit",
+        "En montant de niveau la nuit",
+        "En marchant 1000 pas avec En Avant ! puis en gagnant un niveau",
+        "En échange"
+      ],
+      answerIndex: 2
+    },
+    {
+      id: "z4_q4",
+      q: "Quel Pokémon de type Insecte possède une forme Gigamax ?",
+      choices: ["Papilusion", "Cizayox", "Yanmega", "Mouscoto"],
+      answerIndex: 0
+    },
+    {
+      id: "z4_q5",
+      q: "Combien de formes différentes Prismillon a-t-il ?",
+      choices: ["18", "19", "20", "21"],
+      answerIndex: 2
+    },
+    {
+      id: "z4_q6",
+      q: "Combien de formes différentes Cheniselle a-t-elle ?",
+      choices: ["2", "3", "4", "5"],
+      answerIndex: 1
+    },
+    {
+      id: "z4_q7",
+      q: "Qui a la meilleure Base de Statistiques Totale entre Caratroc et Scolocendre ?",
+      choices: ["Caratroc", "Scolocendre", "Égalité", "Cela dépend du talent"],
+      answerIndex: 1
+    },
+    {
+      id: "z4_q8",
+      q: "Qui a la meilleure Base de Statistiques Totale entre Foretress et Mélokrik ?",
+      choices: ["Foretress", "Mélokrik", "Égalité", "Aucun des deux"],
+      answerIndex: 0
+    },
+    {
+      id: "z4_q9",
+      q: "Qui a la meilleure Base de Statistiques Totale entre Munja et Apitrini ?",
+      choices: ["Munja", "Apitrini", "Égalité", "Les deux ont 236"],
+      answerIndex: 1
+    },
+    {
+      id: "z4_q10",
+      q: "Qui a la meilleure Base de Statistiques Totale entre Cizayox et Astronelle ?",
+      choices: ["Cizayox", "Astronelle", "Égalité", "Cela dépend de la génération"],
+      answerIndex: 1
+    },
+    {
+      id: "z4_q11",
+      q: "Qui a la meilleure Base de Statistiques Totale entre Astronelle et Ninjask ?",
+      choices: ["Astronelle", "Ninjask", "Égalité", "Impossible à départager"],
+      answerIndex: 0
+    },
+    {
+      id: "z4_q12",
+      q: "Qui a la meilleure Base de Statistiques Totale entre Chrysapile et Filentrappe ?",
+      choices: ["Chrysapile", "Filentrappe", "Égalité", "Aucun des deux"],
+      answerIndex: 1
+    },
+    {
+      id: "z4_q13",
+      q: "Qui a la meilleure Base de Statistiques Totale entre Insécateur et Caratroc ?",
+      choices: ["Insécateur", "Caratroc", "Égalité", "Cela dépend de la nature"],
+      answerIndex: 1
+    },
+    {
+      id: "z4_q14",
+      q: "Qui a la meilleure Base de Statistiques Totale entre Aéromite et Parasect ?",
+      choices: ["Aéromite", "Parasect", "Égalité", "Aucun des deux"],
+      answerIndex: 0
+    },
+    {
+      id: "z4_q15",
+      q: "À cause de quelle capacité vaut-il mieux capturer un Aspicot niveau 7 qu’un Coconfort du même niveau dans les 3 premières générations ?",
+      choices: ["Mue", "Armure", "Essaim", "Fuite"],
+      answerIndex: 1
+    }
+  ]
 };
 
 const ZONE_KEYS = ["zone1", "zone2", "zone3", "zone4"];
@@ -371,7 +699,7 @@ function screenWinAllZones() {
     </div>
     <div class="hr"></div>
     <h2 class="big">Tu as réussi toutes les questions ! 🎉</h2>
-    <p class="muted">Choisis maintenant ton nombre 1–20 pour le tirage Zone 4.</p>
+    <p class="muted">L'heure est venue de capturer un pokémon ! Combien de pas veux-tu effectuer dans les hautes herbes ?</p>
     <div class="row">
       <div class="col">
         <input id="numInput" type="number" min="1" max="20" placeholder="Entre un nombre (1 à 20)" />
