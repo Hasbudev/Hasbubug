@@ -250,64 +250,7 @@ const state = {
   currentQuestion: null,
   // user data
   usedQuestionIds: { zone1: [], zone2: [], zone3: [], zone4: [] },
-  // timer
-  timerInterval: null,
-  timerSeconds: 0,
 };
-
-const TIMER_DURATION = 20;
-
-function clearTimer() {
-  if (state.timerInterval) {
-    clearInterval(state.timerInterval);
-    state.timerInterval = null;
-  }
-  document.removeEventListener("visibilitychange", onVisibilityChange);
-}
-
-function onVisibilityChange() {
-  if (document.hidden && state.currentQuestion && !state.stopped) {
-    clearTimer();
-    triggerTimeout(true);
-  }
-}
-
-function startTimer() {
-  clearTimer();
-  state.timerSeconds = TIMER_DURATION;
-  updateTimerUI();
-  document.addEventListener("visibilitychange", onVisibilityChange);
-  state.timerInterval = setInterval(() => {
-    state.timerSeconds--;
-    updateTimerUI();
-    if (state.timerSeconds <= 0) {
-      clearTimer();
-      triggerTimeout(false);
-    }
-  }, 1000);
-}
-
-function updateTimerUI() {
-  const el = document.getElementById("timer-bar");
-  const txt = document.getElementById("timer-text");
-  if (!el || !txt) return;
-  const pct = (state.timerSeconds / TIMER_DURATION) * 100;
-  el.style.width = pct + "%";
-  el.style.background = state.timerSeconds > 10 ? "#4ade80" : state.timerSeconds > 5 ? "#facc15" : "#f87171";
-  txt.textContent = state.timerSeconds + "s";
-}
-
-async function triggerTimeout(wasCheating) {
-  const msg = wasCheating
-    ? "⚠️ Changement d'onglet détecté — réponse annulée !"
-    : "⏱️ Temps écoulé !";
-  const timerEl = document.getElementById("timer-wrap");
-  if (timerEl) timerEl.innerHTML = `<p style="color:#f87171;font-weight:bold">${msg}</p>`;
-  await new Promise(r => setTimeout(r, 1200));
-  state.stopped = true;
-  state.failedAtZoneIndex = state.currentZoneIndex;
-  screenPickNumber();
-}
 
 function zoneKeyAt(i) { return ZONE_KEYS[i]; }
 
@@ -378,28 +321,16 @@ function screenQuestion() {
       `).join("")}
     </div>
 
-    <div id="timer-wrap" style="margin:12px 0">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-        <span id="timer-text" style="font-weight:bold;font-size:1.1rem;min-width:32px">20s</span>
-        <div style="flex:1;background:#333;border-radius:6px;height:10px;overflow:hidden">
-          <div id="timer-bar" style="height:100%;width:100%;background:#4ade80;transition:width 0.9s linear,background 0.5s"></div>
-        </div>
-      </div>
-    </div>
-
     <div class="hr"></div>
     <p class="muted">Réponds juste : si c’est bon, tu avances. Si c’est faux… tu t’arrêtes et tu tires ton Pokémon.</p>
   `);
 
   screen.querySelectorAll("button.choice").forEach(btn => {
     btn.onclick = async () => {
-      clearTimer();
       const idx = Number(btn.dataset.idx);
       await answerQuestion(idx);
     };
   });
-
-  startTimer();
 }
 
 function screenPickNumber() {
@@ -471,14 +402,124 @@ function screenResult(pokemon, zoneKey, numberPicked) {
 
     <div class="hr"></div>
 
-    <div class="poke">
-      <img alt="${esc(pokemon.name)}" src="${pokemonImageUrl(pokemon.id)}" />
-      <div>
+    <style>
+      @keyframes pokefall {
+        0%   { transform: translateY(-80px) rotate(-20deg); opacity: 0; }
+        40%  { transform: translateY(0px) rotate(10deg); opacity: 1; }
+        55%  { transform: translateY(-18px) rotate(-5deg); }
+        70%  { transform: translateY(0px) rotate(3deg); }
+        85%  { transform: translateY(-6px) rotate(-2deg); }
+        100% { transform: translateY(0px) rotate(0deg); }
+      }
+      @keyframes pokesuck {
+        0%   { transform: scale(1); opacity: 1; filter: brightness(1); }
+        30%  { transform: scale(0.6) translateY(10px); opacity: 0.7; filter: brightness(3) saturate(0); }
+        60%  { transform: scale(0.1) translateY(20px); opacity: 0.3; filter: brightness(5) saturate(0); }
+        100% { transform: scale(0) translateY(25px); opacity: 0; }
+      }
+      @keyframes ballshake {
+        0%,100% { transform: rotate(0deg); }
+        20%  { transform: rotate(-18deg); }
+        40%  { transform: rotate(18deg); }
+        60%  { transform: rotate(-12deg); }
+        80%  { transform: rotate(12deg); }
+      }
+      @keyframes ballglow {
+        0%,100% { filter: drop-shadow(0 0 6px #f87171); }
+        50%     { filter: drop-shadow(0 0 22px #fbbf24); }
+      }
+      @keyframes revealname {
+        0%   { opacity: 0; transform: translateY(16px); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes pokeexit {
+        0%   { transform: scale(0) translateY(25px); opacity: 0; filter: brightness(5) saturate(0); }
+        40%  { transform: scale(1.15) translateY(-8px); opacity: 1; filter: brightness(2) saturate(0.5); }
+        100% { transform: scale(1) translateY(0); opacity: 1; filter: brightness(1) saturate(1); }
+      }
+      .capture-stage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+        min-height: 260px;
+        position: relative;
+      }
+      #pokeball-wrap {
+        position: relative;
+        width: 110px;
+        height: 110px;
+        animation: pokefall 0.9s cubic-bezier(.22,1,.36,1) forwards;
+      }
+      #pokeball-img {
+        width: 110px;
+        height: 110px;
+      }
+      #poke-img {
+        width: 150px;
+        height: 150px;
+        object-fit: contain;
+        margin-top: -10px;
+      }
+      #result-name {
+        animation: revealname 0.6s ease forwards;
+        opacity: 0;
+        text-align: center;
+        margin-top: 10px;
+      }
+    </style>
+
+    <div class="capture-stage">
+      <div id="pokeball-wrap">
+        <img id="pokeball-img"
+          src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png"
+          alt="Pokéball" style="width:110px;height:110px;image-rendering:pixelated" />
+      </div>
+      <img id="poke-img"
+        src="${pokemonImageUrl(pokemon.id)}"
+        alt="${esc(pokemon.name)}"
+        style="opacity:0" />
+      <div id="result-name" style="opacity:0">
         <h2 class="big">Tu obtiens : <span style="color: var(--accent)">${esc(pokemon.name)}</span></h2>
         <p class="muted">Ton résultat a été enregistré. Reviens la semaine prochaine pour retenter.</p>
       </div>
     </div>
   `);
+
+  // --- Animation sequence ---
+  const pokeImg   = document.getElementById("poke-img");
+  const ballWrap  = document.getElementById("pokeball-wrap");
+  const ballImg   = document.getElementById("pokeball-img");
+  const nameEl    = document.getElementById("result-name");
+
+  // Step 1: ball has landed (0.9s), show pokemon
+  setTimeout(() => {
+    pokeImg.style.opacity = "1";
+  }, 900);
+
+  // Step 2: pokemon gets sucked in (1.6s)
+  setTimeout(() => {
+    pokeImg.style.animation = "pokesuck 0.7s ease-in forwards";
+  }, 1600);
+
+  // Step 3: ball shakes 3 times (2.4s)
+  setTimeout(() => {
+    ballImg.style.transformOrigin = "center bottom";
+    ballImg.style.animation = "ballshake 0.5s ease-in-out 3, ballglow 0.5s ease-in-out 3";
+  }, 2400);
+
+  // Step 4: pokemon bursts back out (3.95s)
+  setTimeout(() => {
+    ballImg.style.animation = "none";
+    pokeImg.style.opacity = "1";
+    pokeImg.style.animation = "pokeexit 0.7s cubic-bezier(.22,1,.36,1) forwards";
+  }, 3950);
+
+  // Step 5: reveal name (4.7s)
+  setTimeout(() => {
+    nameEl.style.opacity = "1";
+    nameEl.style.animation = "revealname 0.6s ease forwards";
+  }, 4700);
 }
 
 /** =========================

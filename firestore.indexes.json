@@ -1,4 +1,13 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "plays",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "weekNumber", "order": "ASCENDING" },
+        { "fieldPath": "zoneReached", "order": "DESCENDING" }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }
