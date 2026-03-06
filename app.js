@@ -1,8 +1,7 @@
 // app.js (module)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
-  getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp,
-  collection, query, where, orderBy, getDocs
+  getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import {
   getAuth,
@@ -393,73 +392,7 @@ function screenWinAllZones() {
   };
 }
 
-/** =========================
- *  Leaderboard
- *  ========================= */
-async function fetchLeaderboard(weekNumber) {
-  const playsRef = collection(db, "plays");
-  const q = query(
-    playsRef,
-    where("weekNumber", "==", weekNumber),
-    orderBy("zoneReached", "desc")
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map(d => d.data());
-}
-
-function renderLeaderboard(entries, currentUid) {
-  const ZONE_LABELS = { 0: "Zone 1", 1: "Zone 2", 2: "Zone 3", 3: "Zone 4 ✅" };
-  const RARITY_COLORS = {
-    zone1: "#9ca3af", zone2: "#34d399", zone3: "#60a5fa", zone4: "#fbbf24"
-  };
-
-  if (!entries.length) {
-    return `<p class="muted" style="text-align:center;padding:16px">Aucun tirage cette semaine encore.</p>`;
-  }
-
-  const rows = entries.map((e, i) => {
-    const isMe = e.uid === currentUid;
-    const zoneColor = RARITY_COLORS["zone" + (e.zoneReached + 1)] || "#9ca3af";
-    const shinyIcon = e.shiny ? "✨ " : "";
-    const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
-    const pokeName = shinyIcon + (e.pokemon?.name || "?");
-    const zoneTxt = e.failedAtZone === null
-      ? "Zone 4 ✅"
-      : `Zone ${e.failedAtZone || 1}`;
-
-    return `
-      <tr style="${isMe ? "background:rgba(251,191,36,0.08);" : ""}">
-        <td style="padding:8px 10px;font-weight:bold;font-size:0.95rem">${medal}</td>
-        <td style="padding:8px 10px;font-weight:${isMe ? "bold" : "normal"};color:${isMe ? "#fbbf24" : "inherit"}">
-          ${esc(e.pseudo || "?")}${isMe ? " 👈" : ""}
-        </td>
-        <td style="padding:8px 10px">
-          <img src="${e.pokemon?.id ? pokemonImageUrl(e.pokemon.id) : ""}"
-               style="width:32px;height:32px;object-fit:contain;vertical-align:middle;margin-right:6px"
-               alt="${esc(e.pokemon?.name || "")}" />
-          <span style="color:${zoneColor}">${esc(pokeName)}</span>
-        </td>
-        <td style="padding:8px 10px">
-          <span style="color:${zoneColor};font-size:0.85rem;font-weight:bold">${esc(zoneTxt)}</span>
-        </td>
-      </tr>`;
-  }).join("");
-
-  return `
-    <table style="width:100%;border-collapse:collapse;font-size:0.9rem">
-      <thead>
-        <tr style="border-bottom:1px solid #333;color:#888;font-size:0.8rem">
-          <th style="padding:6px 10px;text-align:left">#</th>
-          <th style="padding:6px 10px;text-align:left">Joueur</th>
-          <th style="padding:6px 10px;text-align:left">Pokémon</th>
-          <th style="padding:6px 10px;text-align:left">Zone</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>`;
-}
-
-function screenResult(pokemon, zoneKey, numberPicked, shiny = false) {
+function screenResult(pokemon, zoneKey, numberPicked) {
   render(`
     <div class="row" style="justify-content: space-between;">
       <div class="badge ok">Tirage validé</div>
@@ -469,39 +402,124 @@ function screenResult(pokemon, zoneKey, numberPicked, shiny = false) {
 
     <div class="hr"></div>
 
-    <div class="poke">
-      <img alt="${esc(pokemon.name)}" src="${shiny ? pokemonImageUrlShiny(pokemon.id) : pokemonImageUrl(pokemon.id)}" />
-      <div>
-        <h2 class="big">Tu obtiens : <span style="color: var(--accent)">${shiny ? "✨ " : ""}${esc(pokemon.name)}</span></h2>
+    <style>
+      @keyframes pokefall {
+        0%   { transform: translateY(-80px) rotate(-20deg); opacity: 0; }
+        40%  { transform: translateY(0px) rotate(10deg); opacity: 1; }
+        55%  { transform: translateY(-18px) rotate(-5deg); }
+        70%  { transform: translateY(0px) rotate(3deg); }
+        85%  { transform: translateY(-6px) rotate(-2deg); }
+        100% { transform: translateY(0px) rotate(0deg); }
+      }
+      @keyframes pokesuck {
+        0%   { transform: scale(1); opacity: 1; filter: brightness(1); }
+        30%  { transform: scale(0.6) translateY(10px); opacity: 0.7; filter: brightness(3) saturate(0); }
+        60%  { transform: scale(0.1) translateY(20px); opacity: 0.3; filter: brightness(5) saturate(0); }
+        100% { transform: scale(0) translateY(25px); opacity: 0; }
+      }
+      @keyframes ballshake {
+        0%,100% { transform: rotate(0deg); }
+        20%  { transform: rotate(-18deg); }
+        40%  { transform: rotate(18deg); }
+        60%  { transform: rotate(-12deg); }
+        80%  { transform: rotate(12deg); }
+      }
+      @keyframes ballglow {
+        0%,100% { filter: drop-shadow(0 0 6px #f87171); }
+        50%     { filter: drop-shadow(0 0 22px #fbbf24); }
+      }
+      @keyframes revealname {
+        0%   { opacity: 0; transform: translateY(16px); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes pokeexit {
+        0%   { transform: scale(0) translateY(25px); opacity: 0; filter: brightness(5) saturate(0); }
+        40%  { transform: scale(1.15) translateY(-8px); opacity: 1; filter: brightness(2) saturate(0.5); }
+        100% { transform: scale(1) translateY(0); opacity: 1; filter: brightness(1) saturate(1); }
+      }
+      .capture-stage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+        min-height: 260px;
+        position: relative;
+      }
+      #pokeball-wrap {
+        position: relative;
+        width: 110px;
+        height: 110px;
+        animation: pokefall 0.9s cubic-bezier(.22,1,.36,1) forwards;
+      }
+      #pokeball-img {
+        width: 110px;
+        height: 110px;
+      }
+      #poke-img {
+        width: 150px;
+        height: 150px;
+        object-fit: contain;
+        margin-top: -10px;
+      }
+      #result-name {
+        animation: revealname 0.6s ease forwards;
+        opacity: 0;
+        text-align: center;
+        margin-top: 10px;
+      }
+    </style>
+
+    <div class="capture-stage">
+      <div id="pokeball-wrap">
+        <img id="pokeball-img"
+          src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png"
+          alt="Pokéball" style="width:110px;height:110px;image-rendering:pixelated" />
+      </div>
+      <img id="poke-img"
+        src="${pokemonImageUrl(pokemon.id)}"
+        alt="${esc(pokemon.name)}"
+        style="opacity:0" />
+      <div id="result-name" style="opacity:0">
+        <h2 class="big">Tu obtiens : <span style="color: var(--accent)">${esc(pokemon.name)}</span></h2>
         <p class="muted">Ton résultat a été enregistré. Reviens la semaine prochaine pour retenter.</p>
-      </div>
-    </div>
-
-    <div class="hr" style="margin-top:24px"></div>
-
-    <div style="margin-top:8px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <h3 style="margin:0;font-size:1rem">🏆 Classement — Semaine ${esc(state.weekNumber)}</h3>
-        <span id="lb-status" class="muted" style="font-size:0.8rem">Chargement…</span>
-      </div>
-      <div id="leaderboard-wrap"
-           style="max-height:300px;overflow-y:auto;border:1px solid #2a2a2a;border-radius:10px;background:#111">
-        <p class="muted" style="text-align:center;padding:20px">⏳</p>
       </div>
     </div>
   `);
 
-  // Load leaderboard async after render
-  fetchLeaderboard(state.weekNumber).then(entries => {
-    const wrap = document.getElementById("leaderboard-wrap");
-    const status = document.getElementById("lb-status");
-    if (!wrap) return;
-    wrap.innerHTML = renderLeaderboard(entries, state.uid);
-    if (status) status.textContent = entries.length + " joueur" + (entries.length > 1 ? "s" : "");
-  }).catch(() => {
-    const wrap = document.getElementById("leaderboard-wrap");
-    if (wrap) wrap.innerHTML = `<p class="muted" style="text-align:center;padding:16px">Erreur de chargement.</p>`;
-  });
+  // --- Animation sequence ---
+  const pokeImg   = document.getElementById("poke-img");
+  const ballWrap  = document.getElementById("pokeball-wrap");
+  const ballImg   = document.getElementById("pokeball-img");
+  const nameEl    = document.getElementById("result-name");
+
+  // Step 1: ball has landed (0.9s), show pokemon
+  setTimeout(() => {
+    pokeImg.style.opacity = "1";
+  }, 900);
+
+  // Step 2: pokemon gets sucked in (1.6s)
+  setTimeout(() => {
+    pokeImg.style.animation = "pokesuck 0.7s ease-in forwards";
+  }, 1600);
+
+  // Step 3: ball shakes 3 times (2.4s)
+  setTimeout(() => {
+    ballImg.style.transformOrigin = "center bottom";
+    ballImg.style.animation = "ballshake 0.5s ease-in-out 3, ballglow 0.5s ease-in-out 3";
+  }, 2400);
+
+  // Step 4: pokemon bursts back out (3.95s)
+  setTimeout(() => {
+    ballImg.style.animation = "none";
+    pokeImg.style.opacity = "1";
+    pokeImg.style.animation = "pokeexit 0.7s cubic-bezier(.22,1,.36,1) forwards";
+  }, 3950);
+
+  // Step 5: reveal name (4.7s)
+  setTimeout(() => {
+    nameEl.style.opacity = "1";
+    nameEl.style.animation = "revealname 0.6s ease forwards";
+  }, 4700);
 }
 
 /** =========================
@@ -594,9 +612,6 @@ async function finalizeDraw(numberPicked, forceZone4 = false) {
   const zoneReached = Math.max(0, (state.failedAtZoneIndex ?? zoneIndex));
   const failedAtZone = forceZone4 ? null : (state.failedAtZoneIndex + 1);
 
-  // compute shiny (needs hashStringToUint32)
-  const shiny = (hashStringToUint32(`shiny|${state.uid}|W${state.weekNumber}|${pokemon.id}`) % 50) === 0;
-
   await savePlay({
     uid: state.uid,
     pseudo: state.pseudo,
@@ -605,11 +620,10 @@ async function finalizeDraw(numberPicked, forceZone4 = false) {
     failedAtZone,
     pokemon,
     numberPicked,
-    shiny,
     questionsShown: state.questionsShown,
   });
 
-  screenResult(pokemon, zoneKey, numberPicked, shiny);
+  screenResult(pokemon, zoneKey, numberPicked);
 }
 
 /** =========================
