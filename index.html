@@ -8,16 +8,16 @@
 </head>
 <body>
 
-  <!-- ── Décor Gen 2 ── -->
+  <!-- ── Décor Parc Safari Johto ── -->
   <div class="scene-sky"></div>
-  <canvas id="stars-canvas"></canvas>
-  <div class="scene-moon"></div>
+  <div class="scene-sun"></div>
+  <div class="scene-haze"></div>
   <div class="scene-trees-far"></div>
   <div class="scene-trees-mid"></div>
-  <div class="scene-fog"></div>
   <div class="scene-ground"></div>
-  <div class="scene-grass"></div>
-  <canvas id="firefly-canvas"></canvas>
+  <div class="scene-tall-grass"></div>
+  <div class="scene-path"></div>
+  <canvas id="bug-canvas"></canvas>
 
   <!-- ── App ── -->
   <div class="app">
@@ -39,133 +39,209 @@
     </footer>
   </div>
 
-  <!-- ── Scène animée ── -->
   <script>
-  (function() {
+  (function () {
+    const canvas = document.getElementById("bug-canvas");
+    const ctx    = canvas.getContext("2d");
 
-    /* ── ÉTOILES ── */
-    const starsCanvas = document.getElementById("stars-canvas");
-    const sCtx = starsCanvas.getContext("2d");
-
-    function resizeStars() {
-      starsCanvas.width  = window.innerWidth;
-      starsCanvas.height = window.innerHeight;
+    function resize() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
     }
-    resizeStars();
-    window.addEventListener("resize", resizeStars);
+    resize();
+    window.addEventListener("resize", resize);
 
-    // Génère des étoiles fixes
-    const STAR_COUNT = 160;
-    const stars = Array.from({ length: STAR_COUNT }, () => ({
-      x: Math.random(),
-      y: Math.random() * 0.65,        // seulement dans la moitié haute
-      r: Math.random() * 1.4 + 0.3,
-      baseAlpha: Math.random() * 0.6 + 0.2,
-      twinkleSpeed: Math.random() * 0.02 + 0.005,
-      twinklePhase: Math.random() * Math.PI * 2,
-    }));
+    const W = () => canvas.width;
+    const H = () => canvas.height;
 
-    function drawStars(t) {
-      const W = starsCanvas.width;
-      const H = starsCanvas.height;
-      sCtx.clearRect(0, 0, W, H);
+    /* ══════════════════════════════════════
+       LUCIOLES — point lumineux jaune-vert
+    ══════════════════════════════════════ */
+    const FIREFLY_N = 32;
+    const fireflies = Array.from({ length: FIREFLY_N }, () => spawnFirefly(true));
 
-      for (const s of stars) {
-        const alpha = s.baseAlpha + Math.sin(t * s.twinkleSpeed + s.twinklePhase) * 0.25;
-        sCtx.beginPath();
-        sCtx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
-        // Couleur légèrement verte pour coller à la palette
-        sCtx.fillStyle = `rgba(200, 255, 210, ${Math.max(0, alpha)})`;
-        sCtx.fill();
-      }
-    }
-
-    /* ── LUCIOLES ── */
-    const ffCanvas = document.getElementById("firefly-canvas");
-    const fCtx = ffCanvas.getContext("2d");
-
-    function resizeFireflies() {
-      ffCanvas.width  = window.innerWidth;
-      ffCanvas.height = window.innerHeight;
-    }
-    resizeFireflies();
-    window.addEventListener("resize", resizeFireflies);
-
-    const FIREFLY_COUNT = 28;
-    const fireflies = Array.from({ length: FIREFLY_COUNT }, () => makeFirefly());
-
-    function makeFirefly() {
-      const W = window.innerWidth;
-      const H = window.innerHeight;
+    function spawnFirefly(anywhere) {
+      const h = H();
       return {
-        x: Math.random() * W,
-        y: H * 0.4 + Math.random() * H * 0.45,   // zone basse/forêt
-        vx: (Math.random() - 0.5) * 0.4,
+        x: Math.random() * W(),
+        y: anywhere
+          ? h * 0.3 + Math.random() * h * 0.55
+          : h * 0.35 + Math.random() * h * 0.5,
+        vx: (Math.random() - 0.5) * 0.45,
         vy: (Math.random() - 0.5) * 0.3,
-        r:  Math.random() * 2 + 1,
-        // Phase de clignotement
-        blinkSpeed: Math.random() * 0.03 + 0.01,
-        blinkPhase: Math.random() * Math.PI * 2,
-        // Couleur : vert jaune typique luciole Johto
-        hue: 70 + Math.random() * 40,
-        // Amplitude de dérive sinusoïdale
-        driftAmp: Math.random() * 0.8 + 0.3,
-        driftFreq: Math.random() * 0.015 + 0.005,
+        r:  1.2 + Math.random() * 1.6,
+        hue: 72 + Math.random() * 28,         // vert-jaune
+        blink: Math.random() * Math.PI * 2,
+        blinkSpd: 0.018 + Math.random() * 0.022,
         driftPhase: Math.random() * Math.PI * 2,
-        life: 1,
+        driftAmp: 0.6 + Math.random() * 1.2,
+        driftFreq: 0.006 + Math.random() * 0.012,
       };
     }
 
-    function updateFireflies(t) {
-      const W = ffCanvas.width;
-      const H = ffCanvas.height;
-
-      for (let i = 0; i < fireflies.length; i++) {
-        const f = fireflies[i];
-        f.x += f.vx + Math.sin(t * f.driftFreq + f.driftPhase) * f.driftAmp * 0.1;
-        f.y += f.vy + Math.cos(t * f.driftFreq * 0.7 + f.driftPhase) * f.driftAmp * 0.08;
-
-        // Reboucle doucement
-        if (f.x < -20 || f.x > W + 20 || f.y < H * 0.25 || f.y > H + 10) {
-          fireflies[i] = makeFirefly();
-          fireflies[i].x = Math.random() * W;
-        }
-      }
-    }
-
     function drawFireflies(t) {
-      const W = ffCanvas.width;
-      const H = ffCanvas.height;
-      fCtx.clearRect(0, 0, W, H);
-
       for (const f of fireflies) {
-        const alpha = (Math.sin(t * f.blinkSpeed + f.blinkPhase) + 1) / 2;
-        const glow  = alpha * 0.85 + 0.1;
+        f.x += f.vx + Math.sin(t * f.driftFreq + f.driftPhase) * f.driftAmp * 0.08;
+        f.y += f.vy + Math.cos(t * f.driftFreq * 0.7 + f.driftPhase) * f.driftAmp * 0.06;
 
-        // Halo externe
-        const grad = fCtx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r * 7);
-        grad.addColorStop(0,   `hsla(${f.hue}, 100%, 80%, ${glow * 0.55})`);
-        grad.addColorStop(0.4, `hsla(${f.hue}, 90%, 60%, ${glow * 0.2})`);
-        grad.addColorStop(1,   `hsla(${f.hue}, 80%, 50%, 0)`);
-        fCtx.beginPath();
-        fCtx.arc(f.x, f.y, f.r * 7, 0, Math.PI * 2);
-        fCtx.fillStyle = grad;
-        fCtx.fill();
+        // Recycle si sorti
+        if (f.x < -15 || f.x > W() + 15 || f.y < H() * 0.2 || f.y > H() + 10) {
+          Object.assign(f, spawnFirefly(false));
+          f.x = Math.random() * W();
+        }
 
-        // Point central
-        fCtx.beginPath();
-        fCtx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-        fCtx.fillStyle = `hsla(${f.hue}, 100%, 95%, ${glow})`;
-        fCtx.fill();
+        const alpha = (Math.sin(t * f.blinkSpd + f.blink) + 1) / 2;
+        const glow  = alpha * 0.9 + 0.08;
+
+        const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r * 7);
+        g.addColorStop(0,   `hsla(${f.hue},100%,80%,${glow * 0.55})`);
+        g.addColorStop(0.4, `hsla(${f.hue},90%,60%,${glow * 0.2})`);
+        g.addColorStop(1,   `hsla(${f.hue},80%,50%,0)`);
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.r * 7, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${f.hue},100%,96%,${glow})`;
+        ctx.fill();
       }
     }
 
-    /* ── BOUCLE PRINCIPALE ── */
+    /* ══════════════════════════════════════
+       PAPILLONS / INSECTES volants
+       Silhouette minimaliste 2 ailes
+    ══════════════════════════════════════ */
+    const BUG_N = 10;
+    const bugs  = Array.from({ length: BUG_N }, () => spawnBug(true));
+
+    function spawnBug(anywhere) {
+      const h = H();
+      const types = ["butterfly", "moth", "beetle"];
+      return {
+        type: types[Math.floor(Math.random() * types.length)],
+        x: anywhere ? Math.random() * W() : -40,
+        y: anywhere
+          ? h * 0.15 + Math.random() * h * 0.55
+          : h * 0.15 + Math.random() * h * 0.5,
+        vx: 0.3 + Math.random() * 0.7,
+        vy: (Math.random() - 0.5) * 0.25,
+        scale: 0.55 + Math.random() * 0.55,
+        wingPhase: Math.random() * Math.PI * 2,
+        wingSpd: 0.12 + Math.random() * 0.14,
+        bobPhase: Math.random() * Math.PI * 2,
+        bobAmp: 0.5 + Math.random() * 1.0,
+        bobFreq: 0.015 + Math.random() * 0.015,
+        alpha: 0.5 + Math.random() * 0.35,
+        // couleur selon type
+        color: {
+          butterfly: `hsla(${38 + Math.random()*30},80%,60%,`,   // ambre/or
+          moth:      `hsla(${100 + Math.random()*30},45%,50%,`,  // vert pâle
+          beetle:    `hsla(${130 + Math.random()*20},50%,30%,`,  // vert sombre
+        },
+      };
+    }
+
+    function drawBug(b, t) {
+      ctx.save();
+      ctx.translate(b.x, b.y + Math.sin(t * b.bobFreq + b.bobPhase) * b.bobAmp);
+      ctx.scale(b.scale, b.scale);
+
+      const col = b.color[b.type];
+      const wingOpen = Math.abs(Math.sin(t * b.wingSpd + b.wingPhase));
+
+      if (b.type === "butterfly" || b.type === "moth") {
+        // Aile gauche
+        ctx.beginPath();
+        ctx.ellipse(-7 * wingOpen, -4, 9, 5, -0.4, 0, Math.PI * 2);
+        ctx.fillStyle = col + b.alpha + ")";
+        ctx.fill();
+        ctx.strokeStyle = col + (b.alpha * 0.5) + ")";
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+        // Aile droite
+        ctx.beginPath();
+        ctx.ellipse(7 * wingOpen, -4, 9, 5, 0.4, 0, Math.PI * 2);
+        ctx.fillStyle = col + b.alpha + ")";
+        ctx.fill();
+        ctx.stroke();
+        // Corps
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 1.5, 5, 0, 0, Math.PI * 2);
+        ctx.fillStyle = col + (b.alpha * 1.2) + ")";
+        ctx.fill();
+      } else {
+        // Coléoptère — forme plus ronde
+        ctx.beginPath();
+        ctx.ellipse(-5 * wingOpen * 0.6, 0, 7, 4, -0.3, 0, Math.PI * 2);
+        ctx.fillStyle = col + b.alpha + ")";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(5 * wingOpen * 0.6, 0, 7, 4, 0.3, 0, Math.PI * 2);
+        ctx.fillStyle = col + b.alpha + ")";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 3, 5, 0, 0, Math.PI * 2);
+        ctx.fillStyle = col + (b.alpha + 0.1) + ")";
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawBugs(t) {
+      for (const b of bugs) {
+        b.x += b.vx;
+        b.y += b.vy;
+        if (b.x > W() + 50) Object.assign(b, spawnBug(false));
+        drawBug(b, t);
+      }
+    }
+
+    /* ══════════════════════════════════════
+       SPORES / PARTICULES végétales
+    ══════════════════════════════════════ */
+    const SPORE_N = 40;
+    const spores  = Array.from({ length: SPORE_N }, () => spawnSpore(true));
+
+    function spawnSpore(anywhere) {
+      const h = H();
+      return {
+        x: Math.random() * W(),
+        y: anywhere ? Math.random() * h : h + 5,
+        vx: (Math.random() - 0.3) * 0.35,
+        vy: -(0.15 + Math.random() * 0.35),    // monte doucement
+        r: 0.8 + Math.random() * 1.4,
+        alpha: 0.15 + Math.random() * 0.25,
+        wobble: Math.random() * Math.PI * 2,
+        wobbleSpd: 0.012 + Math.random() * 0.012,
+      };
+    }
+
+    function drawSpores(t) {
+      for (const s of spores) {
+        s.wobble += s.wobbleSpd;
+        s.x += s.vx + Math.sin(s.wobble) * 0.4;
+        s.y += s.vy;
+        if (s.y < -10) Object.assign(s, spawnSpore(false));
+
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(180,220,130,${s.alpha})`;
+        ctx.fill();
+      }
+    }
+
+    /* ══════════════════════════════════════
+       BOUCLE
+    ══════════════════════════════════════ */
     let t = 0;
     function loop() {
       t++;
-      drawStars(t);
-      updateFireflies(t);
+      ctx.clearRect(0, 0, W(), H());
+      drawSpores(t);
+      drawBugs(t);
       drawFireflies(t);
       requestAnimationFrame(loop);
     }
@@ -174,7 +250,6 @@
   })();
   </script>
 
-  <!-- Firebase SDK (modular) -->
   <script type="module" src="./app.js"></script>
 </body>
 </html>

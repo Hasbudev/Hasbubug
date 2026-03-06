@@ -1,520 +1,294 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Nunito:wght@400;500;600&display=swap');
 
 /* ═══════════════════════════════════════════════
-   TOKENS — Palette Johto Nuit Gen 2
+   TOKENS — Parc Safari Johto Gen 2
 ═══════════════════════════════════════════════ */
 :root {
-  --bg:        #050e0a;
-  --bg2:       #081510;
-  --card:      #0a1a10;
-  --text:      #d4f0c8;
-  --muted:     #6b9e74;
-  --accent:    #7eff6e;
-  --accent2:   #ffe066;
-  --danger:    #ff5f5f;
-  --ok:        #7eff6e;
-  --border:    rgba(126,255,110,0.13);
-  --glow:      rgba(126,255,110,0.18);
-  --sky-top:   #020b06;
-  --sky-mid:   #041a0c;
-  --forest-dark: #061209;
-  --leaf1:     #1a4020;
-  --leaf2:     #0f2d14;
-  --leaf3:     #234d28;
-  --grass:     #1c4a1e;
-  --pixel: "Press Start 2P", monospace;
-  --body:  "Inter", sans-serif;
+  --bg:         #0e1a0b;
+  --card:       #111e0e;
+  --text:       #e8dfc0;
+  --muted:      #8a9e6a;
+  --accent:     #c8a84b;
+  --accent2:    #e6c96a;
+  --ok:         #7ec850;
+  --danger:     #d4513a;
+  --border:     rgba(200,168,75,0.18);
+  --glow:       rgba(200,168,75,0.22);
+  --font-title: "Cinzel", serif;
+  --font-body:  "Nunito", sans-serif;
 }
 
-/* ═══════════════════════════════════════════════
-   RESET & BASE
-═══════════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 html, body { height: 100%; overflow-x: hidden; }
 
 body {
-  font-family: var(--body);
+  font-family: var(--font-body);
   color: var(--text);
   background: var(--bg);
   min-height: 100vh;
   position: relative;
 }
 
-/* ═══════════════════════════════════════════════
-   SCENE LAYERS — empilés en position fixed
-═══════════════════════════════════════════════ */
-
-/* 1. Ciel étoilé */
+/* ── SCÈNE SKY ── */
 .scene-sky {
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0; z-index: 0;
   background:
-    radial-gradient(ellipse 120% 60% at 50% -10%, #0a2a14 0%, transparent 70%),
-    linear-gradient(180deg, #020b06 0%, #041508 40%, #061a0c 70%, #0a2010 100%);
-  z-index: 0;
+    radial-gradient(ellipse 90% 50% at 18% -5%,  rgba(255,175,55,0.22) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 78%  2%,  rgba(255,130,35,0.09) 0%, transparent 50%),
+    linear-gradient(175deg, #1e2e0e 0%, #152208 28%, #0e1a0b 55%, #0a1508 100%);
 }
 
-/* 2. Canvas étoiles (JS) */
-#stars-canvas {
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-}
-
-/* 3. Lune */
-.scene-moon {
-  position: fixed;
-  top: 6vh;
-  right: 12vw;
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 38% 38%, #f5f0c8, #e8d87a 55%, #c4a830);
-  box-shadow:
-    0 0 30px 10px rgba(240,220,80,0.18),
-    0 0 80px 30px rgba(240,220,80,0.08);
+/* ── SOLEIL LEVANT ── */
+.scene-sun {
+  position: fixed; top: 5vh; left: 11vw;
+  width: 54px; height: 54px; border-radius: 50%;
+  background: radial-gradient(circle at 42% 42%, #fff8d0, #f5c540 45%, #c47818);
+  box-shadow: 0 0 32px 12px rgba(245,180,40,0.25), 0 0 80px 36px rgba(196,120,18,0.12);
   z-index: 2;
-  animation: moon-breathe 8s ease-in-out infinite;
-  image-rendering: pixelated;
+  animation: sun-breathe 7s ease-in-out infinite alternate;
 }
-/* pixel crater */
-.scene-moon::after {
+.scene-sun::before {
   content: "";
-  position: absolute;
-  top: 30%; left: 22%;
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: rgba(0,0,0,0.12);
-  box-shadow: 14px 8px 0 rgba(0,0,0,0.08), 6px 18px 0 rgba(0,0,0,0.07);
+  position: absolute; inset: -20px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(245,180,40,0.16) 0%, transparent 68%);
+  animation: sun-ray 5s ease-in-out infinite;
 }
-@keyframes moon-breathe {
-  0%,100% { box-shadow: 0 0 30px 10px rgba(240,220,80,0.18), 0 0 80px 30px rgba(240,220,80,0.08); }
-  50%      { box-shadow: 0 0 40px 16px rgba(240,220,80,0.25), 0 0 100px 40px rgba(240,220,80,0.12); }
+@keyframes sun-breathe {
+  0%   { box-shadow: 0 0 28px 10px rgba(245,180,40,0.2),  0 0 65px 28px rgba(196,120,18,0.10); transform: translateY(3px);  }
+  100% { box-shadow: 0 0 44px 18px rgba(245,180,40,0.30), 0 0 100px 44px rgba(196,120,18,0.15); transform: translateY(-5px); }
+}
+@keyframes sun-ray {
+  0%,100% { transform: scale(1);    opacity: 0.6; }
+  50%      { transform: scale(1.18); opacity: 1;   }
 }
 
-/* 4. Arbres arrière-plan (silhouettes SVG inline via pseudo) */
+/* ── BRUME CHALEUR ── */
+.scene-haze {
+  position: fixed; top: 22vh; left: -10%; width: 120%; height: 28vh;
+  background: linear-gradient(180deg, transparent 0%, rgba(150,195,90,0.06) 40%, rgba(130,175,70,0.10) 65%, transparent 100%);
+  filter: blur(22px); z-index: 3;
+  animation: haze-drift 16s ease-in-out infinite alternate;
+}
+@keyframes haze-drift {
+  0%   { transform: translateX(0)   scaleY(1);    opacity: 0.7; }
+  100% { transform: translateX(2.5%) scaleY(1.14); opacity: 1;  }
+}
+
+/* ── ARBRES FAR ── */
 .scene-trees-far {
-  position: fixed;
-  bottom: 18vh;
-  left: 0; right: 0;
-  height: 22vh;
+  position: fixed; bottom: 19vh; left: 0; right: 0;
+  height: 28vh; z-index: 4;
   background:
-    /* Rangée de sapins pointus très sombres */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'%3E%3Cpolygon points='60,0 90,50 78,50 88,80 32,80 42,50 30,50' fill='%230a1f0e'/%3E%3Cpolygon points='20,10 45,55 36,55 42,80 -2,80 4,55 -5,55' fill='%23081a0c'/%3E%3Cpolygon points='100,5 128,60 118,60 125,80 75,80 82,60 72,60' fill='%230c2212'/%3E%3C/svg%3E")
-    repeat-x bottom / 120px 90px;
-  z-index: 3;
-  opacity: 0.85;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='110' viewBox='0 0 160 110'%3E%3Crect x='57' y='70' width='8' height='40' fill='%23211306'/%3E%3Cellipse cx='61' cy='55' rx='28' ry='13' fill='%230e2006' transform='rotate(-25 61 55)'/%3E%3Cellipse cx='61' cy='55' rx='28' ry='13' fill='%23112808' transform='rotate(15 61 55)'/%3E%3Cellipse cx='61' cy='55' rx='28' ry='13' fill='%230c1e05' transform='rotate(-52 61 55)'/%3E%3Cellipse cx='61' cy='55' rx='28' ry='13' fill='%230f2407' transform='rotate(44 61 55)'/%3E%3Ccircle cx='61' cy='52' r='13' fill='%230e2006'/%3E%3Crect x='116' y='74' width='7' height='36' fill='%231a0d04'/%3E%3Cellipse cx='119' cy='62' rx='23' ry='11' fill='%230b1c05' transform='rotate(-30 119 62)'/%3E%3Cellipse cx='119' cy='62' rx='23' ry='11' fill='%230e2207' transform='rotate(20 119 62)'/%3E%3Cellipse cx='119' cy='62' rx='23' ry='11' fill='%230a1a04' transform='rotate(-55 119 62)'/%3E%3Ccircle cx='119' cy='60' r='10' fill='%230c1e06'/%3E%3Cellipse cx='18' cy='110' rx='28' ry='16' fill='%230a1805'/%3E%3Cellipse cx='143' cy='108' rx='24' ry='15' fill='%230c1c06'/%3E%3C/svg%3E")
+    repeat-x bottom / 160px 110px;
+  opacity: 0.88;
 }
 
-/* 5. Arbres milieu */
+/* ── ARBRES MID ── */
 .scene-trees-mid {
-  position: fixed;
-  bottom: 12vh;
-  left: 0; right: 0;
-  height: 18vh;
+  position: fixed; bottom: 12vh; left: 0; right: 0;
+  height: 24vh; z-index: 5;
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='70' viewBox='0 0 90 70'%3E%3Cpolygon points='45,0 72,38 62,38 68,60 22,60 28,38 18,38' fill='%230e2a14'/%3E%3Cpolygon points='15,8 38,45 30,45 35,60 -5,60 0,45 -8,45' fill='%230c2210'/%3E%3Cpolygon points='75,4 100,44 92,44 97,60 53,60 58,44 50,44' fill='%23102e16'/%3E%3C/svg%3E")
-    repeat-x bottom / 90px 70px;
-  z-index: 4;
-  opacity: 0.9;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='85' viewBox='0 0 110 85'%3E%3Crect x='40' y='56' width='9' height='29' fill='%23281505'/%3E%3Cellipse cx='44' cy='43' rx='25' ry='12' fill='%23153010' transform='rotate(-27 44 43)'/%3E%3Cellipse cx='44' cy='43' rx='25' ry='12' fill='%231a3812' transform='rotate(18 44 43)'/%3E%3Cellipse cx='44' cy='43' rx='25' ry='12' fill='%23132c0e' transform='rotate(-50 44 43)'/%3E%3Cellipse cx='44' cy='43' rx='25' ry='12' fill='%23173410' transform='rotate(42 44 43)'/%3E%3Ccircle cx='44' cy='41' r='13' fill='%23153010'/%3E%3Crect x='80' y='60' width='7' height='25' fill='%23201005'/%3E%3Cellipse cx='83' cy='49' rx='19' ry='10' fill='%23122c0d' transform='rotate(-32 83 49)'/%3E%3Cellipse cx='83' cy='49' rx='19' ry='10' fill='%23163210' transform='rotate(22 83 49)'/%3E%3Ccircle cx='83' cy='47' r='10' fill='%23122e0e'/%3E%3Cellipse cx='8'  cy='85' rx='20' ry='13' fill='%23142e0d'/%3E%3Cellipse cx='104' cy='84' rx='17' ry='11' fill='%23112a0c'/%3E%3C/svg%3E")
+    repeat-x bottom / 110px 85px;
 }
 
-/* 6. Brume */
-.scene-fog {
-  position: fixed;
-  bottom: 10vh;
-  left: -20%;
-  width: 140%;
-  height: 14vh;
-  background: linear-gradient(180deg,
-    transparent 0%,
-    rgba(20,60,25,0.12) 30%,
-    rgba(20,60,25,0.22) 60%,
-    rgba(10,30,14,0.35) 100%
-  );
-  border-radius: 50%;
-  filter: blur(18px);
-  z-index: 5;
-  animation: fog-drift 18s ease-in-out infinite alternate;
+/* ── HERBES HAUTES ── */
+.scene-tall-grass {
+  position: fixed; bottom: 9vh; left: 0; right: 0;
+  height: 13vh; z-index: 7; pointer-events: none; overflow: hidden;
 }
-@keyframes fog-drift {
-  0%   { transform: translateX(0) scaleY(1); opacity: 0.7; }
-  100% { transform: translateX(4%) scaleY(1.12); opacity: 1; }
-}
-
-/* 7. Sol & herbes hautes */
-.scene-ground {
-  position: fixed;
-  bottom: 0;
-  left: 0; right: 0;
-  height: 12vh;
-  background: linear-gradient(180deg, #0d2a10 0%, #071608 100%);
-  z-index: 6;
-}
-
-/* Herbes hautes — dessinées en CSS pixel-art */
-.scene-grass {
-  position: fixed;
-  bottom: 10vh;
-  left: 0; right: 0;
-  height: 7vh;
-  z-index: 7;
-  pointer-events: none;
-  overflow: hidden;
-}
-.scene-grass::before,
-.scene-grass::after {
+.scene-tall-grass::before {
   content: "";
-  position: absolute;
-  bottom: 0; left: -2%;
-  width: 104%;
-  height: 100%;
-  background-repeat: repeat-x;
-  background-position: bottom;
+  position: absolute; bottom: 0; left: -1%; width: 102%; height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='50' viewBox='0 0 40 50'%3E%3Cpath d='M4 50 Q5 28 7 18 Q9 10 10 2 Q11 10 12 22 Q13 34 13 50Z' fill='%231e4810'/%3E%3Cpath d='M13 50 Q14 30 17 20 Q19 12 20 4 Q21 14 22 26 Q23 38 23 50Z' fill='%23183e0e'/%3E%3Cpath d='M23 50 Q24 26 27 16 Q29 8 30 0 Q31 10 32 24 Q33 36 33 50Z' fill='%23204e12'/%3E%3C/svg%3E");
+  background-repeat: repeat-x; background-position: bottom; background-size: 40px 50px;
+  animation: grass-back 4s ease-in-out infinite alternate; opacity: 0.7;
 }
-/* Herbes derrière */
-.scene-grass::before {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='28' viewBox='0 0 32 28'%3E%3Cpath d='M2 28 Q4 10 6 4 Q8 10 8 28Z' fill='%23193d1c'/%3E%3Cpath d='M8 28 Q11 12 13 6 Q15 14 16 28Z' fill='%231e4820'/%3E%3Cpath d='M16 28 Q18 8 21 2 Q23 10 24 28Z' fill='%23173819'/%3E%3Cpath d='M22 28 Q25 14 27 8 Q29 15 30 28Z' fill='%231b4020'/%3E%3C/svg%3E");
-  background-size: 32px 28px;
-  animation: grass-sway-back 3.5s ease-in-out infinite alternate;
-  opacity: 0.7;
+.scene-tall-grass::after {
+  content: "";
+  position: absolute; bottom: 0; left: -2%; width: 104%; height: 120%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='60' viewBox='0 0 28 60'%3E%3Cpath d='M2 60 Q3 34 5 20 Q7 10 8 0 Q9 12 10 28 Q11 44 11 60Z' fill='%23285e16'/%3E%3Cpath d='M10 60 Q11 32 14 18 Q16 8 17 0 Q18 10 19 28 Q20 44 20 60Z' fill='%23225213'/%3E%3Cpath d='M19 60 Q20 30 23 16 Q25 6 26 0 Q27 12 27 30 Q27 46 27 60Z' fill='%232c681a'/%3E%3C/svg%3E");
+  background-repeat: repeat-x; background-position: bottom; background-size: 28px 60px;
+  animation: grass-front 3s ease-in-out infinite alternate;
 }
-/* Herbes devant */
-.scene-grass::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='32' viewBox='0 0 24 32'%3E%3Cpath d='M1 32 Q3 10 5 2 Q7 12 8 32Z' fill='%23245a26'/%3E%3Cpath d='M7 32 Q10 14 12 5 Q14 16 15 32Z' fill='%232a6830'/%3E%3Cpath d='M14 32 Q16 8 19 1 Q21 12 22 32Z' fill='%231e5022'/%3E%3C/svg%3E");
-  background-size: 24px 32px;
-  animation: grass-sway-front 2.8s ease-in-out infinite alternate;
-}
-@keyframes grass-sway-back {
-  0%   { transform: skewX(0deg) translateX(0); }
-  100% { transform: skewX(2deg) translateX(3px); }
-}
-@keyframes grass-sway-front {
-  0%   { transform: skewX(0deg) translateX(0); }
-  100% { transform: skewX(-3deg) translateX(-4px); }
+@keyframes grass-back  { 0% { transform: skewX(0deg); } 100% { transform: skewX(2.5deg) translateX(4px); } }
+@keyframes grass-front { 0% { transform: skewX(0deg); } 100% { transform: skewX(-3deg) translateX(-5px); } }
+
+/* ── CHEMIN TERRE ── */
+.scene-path {
+  position: fixed; bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 20vw; height: 11vh; z-index: 6;
+  background: linear-gradient(180deg, #5c3c1a 0%, #3e2a10 55%, #2a1c08 100%);
+  clip-path: polygon(12% 0%, 88% 0%, 100% 100%, 0% 100%);
+  opacity: 0.65;
 }
 
-/* 8. Lucioles (canvas JS) */
-#firefly-canvas {
-  position: fixed;
-  inset: 0;
-  z-index: 8;
-  pointer-events: none;
+/* ── SOL ── */
+.scene-ground {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 10vh; z-index: 6;
+  background: linear-gradient(180deg, #1c3e10 0%, #122a09 40%, #0c1e06 100%);
+}
+
+/* ── CANVAS INSECTES ── */
+#bug-canvas {
+  position: fixed; inset: 0; z-index: 9; pointer-events: none;
 }
 
 /* ═══════════════════════════════════════════════
-   APP LAYOUT
+   APP
 ═══════════════════════════════════════════════ */
 .app {
-  position: relative;
-  z-index: 10;
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 28px 18px 20px;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  position: relative; z-index: 10;
+  max-width: 980px; margin: 0 auto;
+  padding: 28px 18px 20px; min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
 }
 
-/* ═══════════════════════════════════════════════
-   HEADER
-═══════════════════════════════════════════════ */
 .header {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding-top: 8px;
-  margin-bottom: 26px;
+  position: relative; display: flex;
+  justify-content: center; align-items: center;
+  padding-top: 8px; margin-bottom: 26px;
 }
-
-.hero {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
+.hero { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 
 .title {
-  font-family: var(--pixel);
-  font-size: clamp(14px, 3vw, 22px);
-  letter-spacing: 1px;
-  color: var(--accent);
-  text-shadow:
-    0 0 20px rgba(126,255,110,0.5),
-    0 0 40px rgba(126,255,110,0.2),
-    2px 2px 0 rgba(0,0,0,0.6);
-  line-height: 1.5;
-  margin: 0;
+  font-family: var(--font-title);
+  font-size: clamp(18px, 3.2vw, 32px);
+  font-weight: 700; color: var(--accent2);
+  text-shadow: 0 0 30px rgba(200,168,75,0.45), 0 0 60px rgba(200,168,75,0.18), 0 2px 4px rgba(0,0,0,0.75);
+  letter-spacing: 1.5px; margin: 0;
 }
-
-.subtitle {
-  margin: 0;
-  max-width: 620px;
-  color: var(--muted);
-  line-height: 1.5;
-  font-size: 13px;
-}
+.subtitle { margin: 0; max-width: 580px; color: var(--muted); line-height: 1.5; font-size: 13px; }
 
 .main-logo {
-  width: 160px;
-  max-width: 65%;
-  margin-top: 4px;
-  filter:
-    drop-shadow(0 0 20px rgba(126,255,110,0.3))
-    drop-shadow(0 8px 24px rgba(0,0,0,0.7));
+  width: 158px; max-width: 65%; margin-top: 4px;
+  filter: drop-shadow(0 0 16px rgba(200,168,75,0.3)) drop-shadow(0 6px 22px rgba(0,0,0,0.7));
   animation: logo-float 4s ease-in-out infinite;
 }
-@keyframes logo-float {
-  0%,100% { transform: translateY(0px); }
-  50%      { transform: translateY(-7px); }
-}
+@keyframes logo-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
 
 .week-pill {
-  position: fixed;
-  top: 18px; right: 18px;
-  padding: 7px 14px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: rgba(5,14,10,0.75);
-  color: var(--accent);
-  font-family: var(--pixel);
-  font-size: 9px;
-  letter-spacing: 0.5px;
-  backdrop-filter: blur(8px);
-  z-index: 1000;
-  box-shadow: 0 0 12px rgba(126,255,110,0.1), inset 0 0 8px rgba(126,255,110,0.04);
+  position: fixed; top: 18px; right: 18px;
+  padding: 8px 16px; border-radius: 6px;
+  border: 1px solid rgba(200,168,75,0.3);
+  background: rgba(8,14,6,0.82); color: var(--accent);
+  font-family: var(--font-title); font-size: 11px; letter-spacing: 1px;
+  backdrop-filter: blur(10px); z-index: 1000;
+  box-shadow: 0 0 14px rgba(200,168,75,0.1);
 }
 
-/* ═══════════════════════════════════════════════
-   CARD
-═══════════════════════════════════════════════ */
+/* ── CARD ── */
 .card {
   position: relative;
-  background: rgba(6,16,9,0.88);
+  background: rgba(9,16,7,0.88);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 22px 22px 18px;
-  box-shadow:
-    0 0 0 1px rgba(126,255,110,0.04),
-    0 20px 60px rgba(0,0,0,0.6),
-    inset 0 1px 0 rgba(126,255,110,0.08);
-  width: min(720px, 100%);
-  margin: 0 auto 18px;
-  height: auto;
-  min-height: unset;
-  backdrop-filter: blur(12px);
-  /* subtle scanline texture */
-  background-image:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,0,0,0.04) 2px,
-      rgba(0,0,0,0.04) 4px
-    );
+  border-radius: 14px; padding: 24px 24px 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.65), inset 0 1px 0 rgba(200,168,75,0.07);
+  width: min(720px, 100%); margin: 0 auto 18px;
+  height: auto; min-height: unset;
+  backdrop-filter: blur(14px);
 }
-
-/* pixel corner accents */
-.card::before,
+.card::before {
+  content: ""; position: absolute; top: 8px; left: 8px;
+  width: 14px; height: 14px;
+  border-top: 2px solid rgba(200,168,75,0.4); border-left: 2px solid rgba(200,168,75,0.4);
+}
 .card::after {
-  content: "";
-  position: absolute;
-  width: 10px; height: 10px;
-  border-color: var(--accent);
-  border-style: solid;
-  opacity: 0.4;
+  content: ""; position: absolute; bottom: 8px; right: 8px;
+  width: 14px; height: 14px;
+  border-bottom: 2px solid rgba(200,168,75,0.3); border-right: 2px solid rgba(200,168,75,0.3);
 }
-.card::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; border-radius: 2px 0 0 0; }
-.card::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; border-radius: 0 0 2px 0; }
 
-/* ═══════════════════════════════════════════════
-   TYPOGRAPHY
-═══════════════════════════════════════════════ */
+/* ── TYPOGRAPHY ── */
 h1 { margin: 0; font-size: 20px; }
 p  { margin: 6px 0 0; }
-
-.big {
-  font-size: 17px;
-  margin: 0 0 12px;
-  line-height: 1.45;
-  color: var(--text);
-}
-
+.big { font-size: 17px; margin: 0 0 12px; line-height: 1.5; }
 .muted { color: var(--muted); }
 
-/* ═══════════════════════════════════════════════
-   LAYOUT UTILITIES
-═══════════════════════════════════════════════ */
+/* ── LAYOUT ── */
 .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 .col { flex: 1; min-width: 240px; }
 .hr  { height: 1px; background: var(--border); margin: 14px 0; }
 
-/* ═══════════════════════════════════════════════
-   BADGE
-═══════════════════════════════════════════════ */
+/* ── BADGE ── */
 .badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 10px;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  background: rgba(126,255,110,0.04);
-  font-size: 12px;
-  font-family: var(--pixel);
-  line-height: 1.6;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 5px 11px; border: 1px solid var(--border); border-radius: 6px;
+  background: rgba(200,168,75,0.05); font-size: 12px; color: var(--text);
 }
-.badge.ok     { border-color: rgba(126,255,110,0.35); color: var(--ok); }
-.badge.danger { border-color: rgba(255,95,95,0.4);   color: var(--danger); }
+.badge.ok     { border-color: rgba(126,200,80,0.4);  color: var(--ok); }
+.badge.danger { border-color: rgba(212,81,58,0.4);   color: var(--danger); }
 
-/* ═══════════════════════════════════════════════
-   INPUTS
-═══════════════════════════════════════════════ */
+/* ── INPUT ── */
 input, button { font: inherit; }
-
 input {
-  width: 100%;
-  padding: 13px 14px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: rgba(126,255,110,0.04);
-  color: var(--text);
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%; padding: 13px 15px; border-radius: 10px;
+  border: 1px solid var(--border); background: rgba(200,168,75,0.05);
+  color: var(--text); outline: none; transition: border-color .2s, box-shadow .2s;
 }
-input:focus {
-  border-color: rgba(126,255,110,0.4);
-  box-shadow: 0 0 0 3px rgba(126,255,110,0.08);
-}
+input:focus { border-color: rgba(200,168,75,0.4); box-shadow: 0 0 0 3px rgba(200,168,75,0.08); }
+input::placeholder { color: var(--muted); }
 
-/* ═══════════════════════════════════════════════
-   BUTTONS
-═══════════════════════════════════════════════ */
+/* ── BUTTONS ── */
 button {
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: rgba(126,255,110,0.06);
-  color: var(--text);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
-  font-size: 13px;
+  padding: 10px 15px; border-radius: 9px; border: 1px solid var(--border);
+  background: rgba(200,168,75,0.07); color: var(--text); cursor: pointer;
+  font-size: 13px; transition: all .16s ease;
 }
 button:hover:not(:disabled) {
-  background: rgba(126,255,110,0.12);
-  border-color: rgba(126,255,110,0.3);
-  box-shadow: 0 0 14px rgba(126,255,110,0.12);
+  background: rgba(200,168,75,0.14); border-color: rgba(200,168,75,0.35);
+  box-shadow: 0 0 16px rgba(200,168,75,0.14);
 }
 button:active:not(:disabled) { transform: scale(0.97); }
-
 button.primary {
-  background: linear-gradient(135deg, rgba(126,255,110,0.16), rgba(126,255,110,0.08));
-  border-color: rgba(126,255,110,0.4);
-  color: var(--accent);
-  font-weight: 600;
-  box-shadow: 0 0 18px rgba(126,255,110,0.1), inset 0 1px 0 rgba(126,255,110,0.1);
+  background: linear-gradient(135deg, rgba(200,168,75,0.28), rgba(175,138,38,0.2));
+  border-color: rgba(200,168,75,0.5); color: var(--accent2); font-weight: 700;
+  box-shadow: 0 0 22px rgba(200,168,75,0.14), inset 0 1px 0 rgba(255,230,120,0.1);
 }
 button.primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(126,255,110,0.24), rgba(126,255,110,0.14));
-  box-shadow: 0 0 28px rgba(126,255,110,0.2), inset 0 1px 0 rgba(126,255,110,0.15);
+  background: linear-gradient(135deg, rgba(200,168,75,0.38), rgba(175,138,38,0.28));
+  box-shadow: 0 0 32px rgba(200,168,75,0.22);
 }
-
 button:disabled { opacity: 0.45; cursor: not-allowed; }
+.big-btn { font-size: 14px; padding: 14px 30px; border-radius: 11px; font-weight: 700; }
 
-.big-btn {
-  font-size: 1rem;
-  padding: 14px 28px;
-  border-radius: 10px;
-  font-family: var(--pixel);
-  font-size: 11px;
-  letter-spacing: 0.3px;
-  line-height: 1.6;
-}
-
-/* ═══════════════════════════════════════════════
-   CHOICE BUTTONS
-═══════════════════════════════════════════════ */
+/* ── CHOICES ── */
 .choice {
-  text-align: left;
-  width: 100%;
-  position: relative;
-  overflow: hidden;
+  text-align: left; width: 100%;
+  border: 1px solid rgba(200,168,75,0.12);
+  background: rgba(200,168,75,0.04); transition: all .16s ease;
 }
-.choice::before {
-  content: "▶";
-  margin-right: 8px;
-  font-size: 9px;
-  color: var(--accent);
-  opacity: 0;
-  transition: opacity 0.15s;
-}
+.choice::before { content: "▶"; margin-right: 8px; font-size: 9px; color: var(--accent); opacity: 0; transition: opacity .15s; }
 .choice:hover:not(.disabled)::before { opacity: 1; }
+.choice:hover:not(.disabled) {
+  border-color: rgba(200,168,75,0.38); background: rgba(200,168,75,0.1); transform: translateX(4px);
+}
 .choice.disabled { opacity: 0.45; pointer-events: none; }
-.choice.timeout  {
-  border-color: rgba(255,95,95,0.5) !important;
-  background: rgba(255,95,95,0.08) !important;
-}
+.choice.timeout  { border-color: rgba(212,81,58,0.45) !important; background: rgba(212,81,58,0.08) !important; }
 
-/* ═══════════════════════════════════════════════
-   GRID
-═══════════════════════════════════════════════ */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0,1fr));
-  gap: 10px;
-}
+/* ── GRID ── */
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
 @media (max-width: 560px) {
   .grid { grid-template-columns: 1fr; }
-  .header { flex-direction: column; align-items: flex-start; }
+  .week-pill { font-size: 9px; padding: 6px 10px; top: 10px; right: 10px; }
+  .title { font-size: 16px; }
 }
 
-/* ═══════════════════════════════════════════════
-   POKÉMON DISPLAY
-═══════════════════════════════════════════════ */
-.poke {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
+/* ── POKÉMON ── */
+.poke { display: flex; align-items: center; gap: 14px; }
 .poke img {
-  width: 120px;
-  height: 120px;
-  object-fit: contain;
-  image-rendering: auto;
-  background: rgba(126,255,110,0.04);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 10px;
+  width: 120px; height: 120px; object-fit: contain;
+  background: rgba(200,168,75,0.04); border: 1px solid var(--border);
+  border-radius: 14px; padding: 10px;
 }
 
-/* ═══════════════════════════════════════════════
-   FOOTER
-═══════════════════════════════════════════════ */
+/* ── FOOTER ── */
 .footer {
-  width: 100%;
-  margin-top: auto;
-  padding: 16px 0 8px;
-  font-size: 11px;
-  font-family: var(--pixel);
-  opacity: 0.4;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  text-align: center;
-  color: var(--muted);
-  letter-spacing: 0.5px;
-}
-
-/* ═══════════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════════ */
-@media (max-width: 560px) {
-  .week-pill { font-size: 8px; padding: 6px 10px; top: 10px; right: 10px; }
-  .title { font-size: 13px; }
+  width: 100%; margin-top: auto; padding: 16px 0 8px;
+  font-size: 11px; font-family: var(--font-title); opacity: 0.32;
+  display: flex; justify-content: center; align-items: center;
+  gap: 10px; letter-spacing: 1px; color: var(--muted);
 }
