@@ -118,8 +118,8 @@ const POKEBALL_BY_ZONE = {
 
 const SHINY_CHANCE = 50; // 1 in 50
 
-function isShiny(uid, weekNumber, zoneKey, numberPicked) {
-  const seed = hashStringToUint32(`shiny|${uid}|W${weekNumber}|${zoneKey}|${numberPicked}`);
+function isShiny(uid, weekNumber, zoneKey, drawToken) {
+  const seed = hashStringToUint32(`shiny|${uid}|W${weekNumber}|${zoneKey}|${drawToken}`);
   return (seed % SHINY_CHANCE) === 0;
 }
 
@@ -195,10 +195,12 @@ function buildSlots(zoneKey) {
   return slots;
 }
 
-function drawPokemon({ uid, weekNumber, zoneKey, numberPicked }) {
+function drawPokemon({ uid, weekNumber, zoneKey, drawToken }) {
+  // drawToken est un token aléatoire généré au moment du tirage — imprévisible,
+  // unique par joueur par tirage. Le numéro choisi n'influence plus le résultat.
   const slots = buildSlots(zoneKey);
-  const shuffled = shuffleSeeded(slots, `${uid}|W${weekNumber}|${zoneKey}`);
-  return shuffled[numberPicked - 1];
+  const shuffled = shuffleSeeded(slots, `${uid}|W${weekNumber}|${zoneKey}|${drawToken}`);
+  return shuffled[0]; // toujours index 0 après shuffle unique
 }
 
 /** =========================
@@ -830,16 +832,19 @@ async function finalizeDraw(numberPicked, forceZone4 = false) {
   const zoneIndex = forceZone4 ? 3 : (state.failedAtZoneIndex ?? state.currentZoneIndex);
   const zoneKey = zoneKeyAt(zoneIndex);
 
-  // tirage pondéré seedé (uid + semaine + zone)
+  // Token aléatoire unique généré au moment du tirage — impossible à prédire ou partager.
+  // Le numéro choisi par le joueur est conservé pour l'affichage mais n'affecte plus le résultat.
+  const drawToken = crypto.randomUUID();
+
   const pokemon = drawPokemon({
     uid: state.uid,
     weekNumber: state.weekNumber,
     zoneKey,
-    numberPicked,
+    drawToken,
   });
 
-  // shiny deterministic
-  state.shiny = isShiny(state.uid, state.weekNumber, zoneKey, numberPicked);
+  // shiny basé sur le même token imprévisible
+  state.shiny = isShiny(state.uid, state.weekNumber, zoneKey, drawToken);
 
   // zoneReached = nombre de zones validées (questions correctes)
   const zoneReached = Math.max(0, (state.failedAtZoneIndex ?? zoneIndex));
