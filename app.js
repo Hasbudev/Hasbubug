@@ -22,7 +22,7 @@ const FIREBASE_CONFIG = {
 };
 
 const CURRENT_WEEK = 3; // <-- tu changes à la main chaque semaine
-const PARK_CLOSED = false;
+const PARK_CLOSED = true;
 
 const DISCORD_CLIENT_ID = "1469008258558722183";
 const DISCORD_AUTH_ENDPOINT = "https://discordauth-vrky2p236a-uc.a.run.app";
