@@ -21,7 +21,7 @@ const FIREBASE_CONFIG = {
   appId: "1:444496450425:web:b2c9afd83bb06722c1d5a8",
 };
 
-const CURRENT_WEEK = 3; // <-- tu changes à la main chaque semaine
+const CURRENT_WEEK = 4; // <-- tu changes à la main chaque semaine
 const PARK_CLOSED = false; // <-- tu peux fermer le parc en cas de problème (bug, question à revoir...) en mettant true, les joueurs verront un message d'indisponibilité
 
 const DISCORD_CLIENT_ID = "1469008258558722183";
